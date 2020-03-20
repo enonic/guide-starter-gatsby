@@ -1,4 +1,4 @@
-const query = `
+const query = `{
   query(contentTypes: "%application%:person", query: "valid='true'", first: 100) {
     name: _name
     id: _id
@@ -17,6 +17,6 @@ const query = `
       }
     }
   }
-`
+}`
 
 module.exports = query;

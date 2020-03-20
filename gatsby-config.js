@@ -11,7 +11,7 @@ module.exports = {
       options: {
         api: 'http://localhost:8080/site/default/draft/hmdb/api',
         refetchInterval: 10,
-        application: 'com.enonic.headless',
+        application: 'com.example.myproject',
         pages: [{
           list: {
             url: '/movies',
