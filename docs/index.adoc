@@ -82,7 +82,7 @@ If you have installed Content Studio app in your XP environment, you can see the
 image::images/guide-5.png["Headless Movie Database site in Content Studio", width="768px"]
 
 
-=== GraphQL
+=== GraphQL queries
 
 Before you start using the plugin, it's important that you understand how to fetch data from Enonic XP with GraphQL. The Headless
 CMS starter already provides necessary GraphQL schema generation for you, so the only thing you need to do is write correct queries.
@@ -92,13 +92,91 @@ NOTE: *New to GraphQL?* Check out the https://graphql.org[GraphQL documentation,
 In this guide we will use two prepared queries, one to retrieve _Movies_ and another to retrieve _Persons_. For your own data the queries
 will obviously be different, so make sure you get acquainted with GraphQL before building your own Gatsby site.
 
-TIP: You can use GraphQL playground of the http://localhost:8080/site/default/draft/hmdb/api[API endpoint] to write and test queries.
+TIP: You can use GraphQL playground of the http://localhost:8080/site/default/draft/hmdb/api[API endpoint,window=_blank] to write and test queries.
 
+First, let's write a query to retrieve movies:
 
-First, let's write a query to retrieve all movies:
+.A query to fetch movies:
+[source,GraphQL]
+----
+{
+  guillotine {
+    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", first: 100) {
+      name: _name
+      id: _id
+      displayName
+      ... on com_example_myproject_Movie {
+        data {
+          subtitle
+          release
+          abstract
+          trailer
+          photos {
+            ... on media_Image {
+              url_w800: imageUrl(type: absolute, scale: "width(800)")
+              attachments {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+----
 
 image::images/guide-6.png["GraphQL query to retrieve movies", width="929px"]
 
+NOTE: As you already know from the Headless CMS guide, API in the Headless Starter is provided
+by the https://developer.enonic.com/docs/guillotine-app[Guillotine project,window=_blank],
+therefore each query is wrapped inside `guillotine {}` field.
+
+Note that we pass `contentTypes` parameter to the query to fetch content only of specific type `com.example.myproject:movie`,
+where `com.example.myproject` is your application name (the one you chose when creating an XP project with CLI).
+
+The query retrieves the fields from movie content type which we will show on the site pages, like movie name, abstract, release date,
+images etc.
+
+Note that fields specific to this content type has to be casted with `... on com_example_myproject_Movie` where you again
+have to use your application name.
+
+Here's the second query that fetches content of "persons" content type:
+
+.A query to fetch persons:
+[source,GraphQL]
+----
+{
+  guillotine {
+    query(contentTypes: "com.example.myproject:person", query: "valid='true'", first: 100) {
+      name: _name
+      id: _id
+      displayName
+      ... on com_example_myproject_Person {
+        data {
+          bio
+          photos {
+            ... on media_Image {
+              url_w800: imageUrl(type: absolute, scale: "width(800)")
+              attachments {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+image::images/guide-7.png["GraphQL query to retrieve persons", width="1343px"]
+
+
+This query is very similar to the first one, except we are requesting content of `com.example.myproject:person` content type.
+
+We will use both these queries when we start configuring the Gatsby plugin, but it's important that you get both
+to actually return some data in the GraphQL playground and understand how they work.
 
 == Enonic plugin for Gatsby
 
@@ -167,5 +245,6 @@ But before we get to page config, let's explain the basic options:
 <1> Url of the GraphQL endpoint inside a site in XP. This is where the data will be fetched from.
 <2> (optional) If you want content of your pages to be dynamically refreshed whenever underlying data changes, you can specify
 how often you want the storage to be checked for new changes (in seconds).
-<3> (optional) Name of the application (the one you specify when creating a new project with Enonic CLI)
+<3> (optional) Name of the application (the one you specify when creating a new project with Enonic CLI). This name will be
+used if you are using %application% placeholder in your GraphQL queries.
 
