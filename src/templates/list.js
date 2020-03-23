@@ -6,11 +6,12 @@ import {getPageTitle} from "../helpers/helper";
 
 const _ = require(`lodash`)
 
-const MoviesPage = (args) => {
+const ListPage = (args) => {
     const { pageContext } = args
     return (
       <Layout>
         <SEO title={getPageTitle(pageContext)} />
+        <h1>{pageContext.title}</h1>
           {
               pageContext.nodes.map(node => (
                 <div key={node.id}>
@@ -30,4 +31,4 @@ const MoviesPage = (args) => {
     )
 }
 
-export default MoviesPage
+export default ListPage

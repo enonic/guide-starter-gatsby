@@ -1,6 +1,6 @@
 const query = `{
   guillotine {
-    query(contentTypes: "%application%:person", query: "valid='true'", first: 100) {
+    query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName") {
       name: _name
       id: _id
       displayName

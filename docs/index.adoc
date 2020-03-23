@@ -81,6 +81,12 @@ If you have installed Content Studio app in your XP environment, you can see the
 
 image::images/guide-5.png["Headless Movie Database site in Content Studio", width="768px"]
 
+Normally, if you'd want to use Enonic XP to render the list of movies or persons on a site, you would have to set up a
+page template and page controller, plug in template renderer and XP libraries, in other words do a lot of quite advanced development.
+
+*The purpose of this guide* is to describe how you can configure Enonic plugin for Gatsby to generate pages with movie
+and person lists (as well as dedicated details page for every movie/person) without any coding in Enonic XP whatsoever.
+The only advanced thing you need to master is how to write a proper query to retrieve the data you want to render on your site pages.
 
 === GraphQL queries
 
@@ -101,26 +107,9 @@ First, let's write a query to retrieve movies:
 ----
 {
   guillotine {
-    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", first: 100) {
-      name: _name
+    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", sort: "displayName") {
       id: _id
       displayName
-      ... on com_example_myproject_Movie {
-        data {
-          subtitle
-          release
-          abstract
-          trailer
-          photos {
-            ... on media_Image {
-              url_w800: imageUrl(type: absolute, scale: "width(800)")
-              attachments {
-                name
-              }
-            }
-          }
-        }
-      }
     }
   }
 }
@@ -135,8 +124,10 @@ therefore each query is wrapped inside `guillotine {}` field.
 Note that we pass `contentTypes` parameter to the query to fetch content only of specific type `com.example.myproject:movie`,
 where `com.example.myproject` is your application name (the one you chose when creating an XP project with CLI).
 
-The query retrieves the fields from movie content type which we will show on the site pages, like movie name, abstract, release date,
-images etc.
+The other two parameters of the query are `query: "valid='true'"` (to filter out items that don't have all of the mandatory fields filled out)
+and `sort: "displayName"` (to sort the list by name).
+
+This query retrieves the very minimum of fields from the movie content type needed to output the list: `id` and `displayName`.
 
 Note that fields specific to this content type has to be casted with `... on com_example_myproject_Movie` where you again
 have to use your application name.
@@ -148,23 +139,9 @@ Here's the second query that fetches content of "persons" content type:
 ----
 {
   guillotine {
-    query(contentTypes: "com.example.myproject:person", query: "valid='true'", first: 100) {
-      name: _name
+    query(contentTypes: "com.example.myproject:person", query: "valid='true'", sort: "displayName") {
       id: _id
       displayName
-      ... on com_example_myproject_Person {
-        data {
-          bio
-          photos {
-            ... on media_Image {
-              url_w800: imageUrl(type: absolute, scale: "width(800)")
-              attachments {
-                name
-              }
-            }
-          }
-        }
-      }
     }
   }
 }
@@ -225,26 +202,223 @@ package.json
 
 Open the file called _gatsby-config.js_ in the project root. Here's where you configure plugins used by the site.
 
+==== General configuration
+
 Add this config inside `plugins []`:
 
-    plugins: [
-        {
-          resolve: `gatsby-plugin-enonic`,
-          options: {
-            api: 'http://localhost:8080/site/default/draft/hmdb/api', <1>
-            refetchInterval: 10, <2>
-            application: 'com.example.myproject', <3>
-          }
-        },
-        // other plugins here
-    ]
-
+.Base plugin config
+[source,JSON]
+----
+plugins: [
+    {
+      resolve: `gatsby-plugin-enonic`,
+      options: {
+        api: 'http://localhost:8080/site/default/draft/hmdb/api', <1>
+        application: 'com.example.myproject', <2>
+        refetchInterval: 10, <3>
+      }
+    },
+    // other plugins here
+]
+----
 The pages are not configured yet and the plugin is not functional since it requires at least one page definition.
 But before we get to page config, let's explain the basic options:
 
 <1> Url of the GraphQL endpoint inside a site in XP. This is where the data will be fetched from.
-<2> (optional) If you want content of your pages to be dynamically refreshed whenever underlying data changes, you can specify
-how often you want the storage to be checked for new changes (in seconds).
-<3> (optional) Name of the application (the one you specify when creating a new project with Enonic CLI). This name will be
+<2> (optional) Name of the application (the one you specify when creating a new project with Enonic CLI). This name will be
 used if you are using %application% placeholder in your GraphQL queries.
+<3> (optional) If you want contents of your pages to be dynamically refreshed whenever underlying data changes, you can specify
+how often you want the storage to be checked for new changes (in seconds). You don't want this to be too often since a new request
+will be sent to server every time to fetch the data.
 
+Now let's start configuring the pages.
+
+==== Listing page
+
+At the moment of writing Enonic plugin for Gatsby supports two types of pages: `list` and `details`.
+
+Let's configure pages with Movie and Person lists.
+
+First, we need to create a simple template that will output the list. Since we are building a relatively simple list
+showing just movie or person name (with a link to the details page), we can use the same template for both lists.
+
+
+1. Create a new folder called "_templates_" in the `src` folder of your Gatsby site.
+
+2. In `src/templates` create a file called `list.js` with the following contents:
+
++
+.Template for the listing page
+[source,javascript]
+----
+import React from "react"
+import Layout from "../components/layout"
+import SEO from "../components/seo"
+
+const ListPage = (args) => {
+    const { pageContext } = args
+    return (
+      <Layout>
+        <SEO title={pageContext.title || `List`} />
+        <h1>{pageContext.title}</h1>
+          {
+              pageContext.nodes.map(node => (
+                <div key={node.id}>
+                    <span>{node.displayName}</span>
+                </div>
+          ))
+          }<br/>
+      </Layout>
+    )
+}
+
+export default ListPage
+----
++
+Now, from the Gatsby tutorials you know that Gatsby operates with React components. Our listing page (`const ListPage`) is also a React component.
+It takes `pageContext` argument (more about that later) which contains the list of `nodes` which are basically the result of a GraphQL
+query we wrote a bit earlier in this guide. The component iterates through the array of nodes and for every node it outputs a `<div>` with unique
+key (`node.id`) and an item's display name (`node.displayName`). This makes it a very basic list which can be used both for Movies and Persons.
++
+The resulting list is wrapped inside `<Layout>` component which already comes with the Gatsby starter site and which injects header, footer and
+applies some nice styling to the page, so that we don't have to care about it.
++
+<SEO> is another component that comes with the Gatsby starter which generates various SEO tags. You don't have to use it, but it's a nice add-on.
+If you pass `title` argument to it (like we did above) it will use page title in SEO tags and display specified title in the browser tab.
+
+3. Remember the two GraphQL queries we wrote earlier in this guide to retrieve movies and persons from the database? We need to put them in a file
+so that the plugin could find them.
++
+
+4. Create a new folder called "_queries_" in the `src` folder of your Gatsby site.
+
+5. In `src/queries` create a file called `getMovies.js` exposing the query fetching the movies:
++
+.`src/queries/getMovies.js`
+[source,javascript]
+----
+const query = `{
+  guillotine {
+    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", sort: "displayName") {
+      id: _id
+      displayName
+    }
+  }
+}
+`
+
+module.exports = query;
+----
+
+6. Now let's do the same for the persons query - put it in a file called `getPersons.js` in the same folder.
++
+TIP: You can replace application name inside a query with `%application%` placeholder
+(but make sure you defined `application` option in the plugin config). This will help you reuse the same queries in
+several applications and not care about possible changes of application name.
++
+.`src/queries/getPersons.js` (with placeholder)
+[source,javascript]
+----
+const query = `{
+  guillotine {
+    query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName") {
+      id: _id
+      displayName
+    }
+  }
+}`
+
+module.exports = query;
+----
++
+TIP: As mentioned before, GraphQL queries for Enonic XP have to be wrapped inside `guillotine {}` field. If you for some
+reasons don't like this, you can omit it - the plugin supports both versions.
++
+.`src/queries/getPersons.js` (unwrapped)
+[source,javascript]
+----
+const query = `{
+  query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName") {
+    id: _id
+    displayName
+  }
+}`
+
+module.exports = query;
+----
+
+7. Go back to `gatsby-config.js` and add the following to our previous plugin config:
++
+.Config of the listing page
+[source,JSON]
+----
+pages: [{
+  query: require.resolve('./src/queries/getMovies'),  <1>
+  list: <2> {
+    url: '/movies', <3>
+    template: require.resolve('./src/templates/list.js'), <4>
+    title: 'Movies' <5>
+  }
+}]
+----
++
+<1> A path to a Javascript file exposing a string with GraphQL query via `module.exports`
+<2> A keyword indicating definition of a listing page.
+<3> Url of the page. If your site is on "_localhost:8000_", this page will be on "_localhost:8000/movies_"
+<4> A path to a Javascript file exposing React component rendering the list of data nodes.
+<5> (optional) Title of the page, should you need to use it inside the template
++
+.Full config of the plugin (so far)
+[source,JSON]
+----
+{
+  resolve: `gatsby-plugin-enonic`,
+  options: {
+    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    application: 'com.example.myproject',
+    refetchInterval: 10,
+    pages: [{
+      query: require.resolve('./src/queries/getMovies'),
+      list: {
+        url: '/movies',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Movies'
+      }
+    }]
+  }
+}
+----
+
+8. Now switch to the terminal window and run `gatsby develop` in your `hello-world` folder:
++
+image::images/guide-8.png["GraphQL query to retrieve persons", width="484px"]
++
+If everything was configured properly, you will see something similar in the terminal window, indicating that the site is built and
+Gatsby development server is ready to serve the content.
++
+If you are getting errors, double-check the previous steps to make sure you didn't miss anything, that Enonic XP is up and
+running on port 8080 and that syntax inside GraphQL queries and Javascript files is as explained.
++
+Open the Gatsby site at http://localhost:8000[http://localhost:8000]. Visually nothing has changed since the first time we opened it after
+it was created from the Gatsby starter. So how do we check the contents of our Movies page? You can either open
+http://localhost:8000/movies[http://localhost:8000/movies] directly in your browser, or you can add a link to the site's main page to make
+your life a bit easier.
+
+9. Open `/src/pages/index.js`
+
+Modify the "_Go to page 2_" link at the bottom of the page like this:
+
+    <Link to="/movies">Open Movies/Link>
+
+The page should be refreshed automatically and you will see this:
+
+image::images/guide-9.png["Link to Movies from the main page", width="685px"]
+
+Click the "Open Movies" link.
+
+image::images/guide-10.png["Movies listing", width="393px"]
+
+Congratulations! You have built your first Gatsby page with contents from Enonic XP.
+
+IMPORTANT: If you make changes to a query, you have to restart the Gatsby development server (press `Ctrl+C` to stop, then `gatsby develop` again)
+since the site pages have to be rebuilt from scratch to respect the new query changes.
