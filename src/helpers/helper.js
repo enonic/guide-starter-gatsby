@@ -1,10 +1,11 @@
 const defaultPageTitle = 'Home';
 
-export const getPageTitle = (pageContext, node) => {
-  let pageTitle = pageContext.title || defaultPageTitle;
-  if (!!node && pageTitle.startsWith('.')) {
-    pageTitle = node[pageTitle.slice(1)] || node.data[pageTitle.slice(1)];
+export const getPageTitle = (pageContext) => {
+  const node = pageContext.node;
+
+  if (!!node && pageContext.title && (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
   }
 
-  return pageTitle;
+  return pageContext.title || defaultPageTitle;
 };

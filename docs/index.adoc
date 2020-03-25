@@ -74,8 +74,8 @@ Now let's make Gatsby and Enonic XP communicate with each other!
 == Headless data
 
 If you have read through the https://developer.enonic.com/templates/headless-cms/[Headless CMS Starter,window=_blank] guide,
-you already know that an XP application based on the Headless CMS Starter creates a site called "_Headless Movie Database_", which
-contains some sample data about Movies and Persons (actors and directors).
+ёyou already know that an XP application based on the Headless CMS Starter creates a site called
+*Headless Movie Database* , which contains some sample data about Movies and Persons (actors and directors).
 
 If you have installed Content Studio app in your XP environment, you can see the site there:
 
@@ -239,60 +239,12 @@ At the moment of writing Enonic plugin for Gatsby supports two types of pages: `
 
 Let's configure pages with Movie and Person lists.
 
-First, we need to create a simple template that will output the list. Since we are building a relatively simple list
-showing just movie or person name (with a link to the details page), we can use the same template for both lists.
-
-
-1. Create a new folder called "_templates_" in the `src` folder of your Gatsby site.
-
-2. In `src/templates` create a file called `list.js` with the following contents:
-
-+
-.Template for the listing page
-[source,javascript]
-----
-import React from "react"
-import Layout from "../components/layout"
-import SEO from "../components/seo"
-
-const ListPage = (args) => {
-    const { pageContext } = args
-    return (
-      <Layout>
-        <SEO title={pageContext.title || `List`} />
-        <h1>{pageContext.title}</h1>
-          {
-              pageContext.nodes.map(node => (
-                <div key={node.id}>
-                    <span>{node.displayName}</span>
-                </div>
-          ))
-          }<br/>
-      </Layout>
-    )
-}
-
-export default ListPage
-----
-+
-Now, from the Gatsby tutorials you know that Gatsby operates with React components. Our listing page (`const ListPage`) is also a React component.
-It takes `pageContext` argument (more about that later) which contains the list of `nodes` which are basically the result of a GraphQL
-query we wrote a bit earlier in this guide. The component iterates through the array of nodes and for every node it outputs a `<div>` with unique
-key (`node.id`) and an item's display name (`node.displayName`). This makes it a very basic list which can be used both for Movies and Persons.
-+
-The resulting list is wrapped inside `<Layout>` component which already comes with the Gatsby starter site and which injects header, footer and
-applies some nice styling to the page, so that we don't have to care about it.
-+
-<SEO> is another component that comes with the Gatsby starter which generates various SEO tags. You don't have to use it, but it's a nice add-on.
-If you pass `title` argument to it (like we did above) it will use page title in SEO tags and display specified title in the browser tab.
-
-3. Remember the two GraphQL queries we wrote earlier in this guide to retrieve movies and persons from the database? We need to put them in a file
+Remember the two GraphQL queries we wrote earlier in this guide to retrieve movies and persons from the database? We need to put them in files
 so that the plugin could find them.
-+
 
-4. Create a new folder called "_queries_" in the `src` folder of your Gatsby site.
+1. Create a new folder called "_queries_" in the `src` folder of your Gatsby site.
 
-5. In `src/queries` create a file called `getMovies.js` exposing the query fetching the movies:
+2. In `src/queries` create a file called `getMovies.js` exposing the query fetching the movies:
 +
 .`src/queries/getMovies.js`
 [source,javascript]
@@ -310,7 +262,7 @@ const query = `{
 module.exports = query;
 ----
 
-6. Now let's do the same for the persons query - put it in a file called `getPersons.js` in the same folder.
+3. Now let's do the same for the persons query - put it in a file called `getPersons.js` in the same folder.
 +
 TIP: You can replace application name inside a query with `%application%` placeholder
 (but make sure you defined `application` option in the plugin config). This will help you reuse the same queries in
@@ -346,8 +298,56 @@ const query = `{
 
 module.exports = query;
 ----
++
 
-7. Go back to `gatsby-config.js` and add the following to our previous plugin config:
+Now that our queries are ready, we need to create a simple template that will output the list retrieved by the queries.
+Since we are building a relatively simple list showing just movie or person name (with a link to the details page),
+we can use the same template for both lists.
+
+4. Create a new folder called "_templates_" in the `src` folder of your Gatsby site.
+
+5. In `src/templates` create a file called `list.js` with the following contents:
+
++
+.Template for the listing page
+[source,javascript]
+----
+import React from "react"
+import Layout from "../components/layout"
+import SEO from "../components/seo"
+
+const ListPage = (args) => {
+    const { pageContext } = args
+    return (
+      <Layout>
+        <SEO title={pageContext.title || `List`} />
+        <h1>{pageContext.title}</h1>
+          {
+              pageContext.nodes.map(node => (
+                <div key={node.id}>
+                    <span>{node.displayName}</span>
+                </div>
+          ))
+          }<br/>
+      </Layout>
+    )
+}
+
+export default ListPage
+----
++
+Now, from the Gatsby tutorials you know that Gatsby operates with React components. Our listing page (`const ListPage`) is also a React component.
+It takes `pageContext` argument which contains the list of `nodes` which are basically the result of a GraphQL
+query we wrote a bit earlier in this guide. The component iterates through the array of nodes and for every node it outputs a `<div>` with unique
+key (`node.id`) and an item's display name (`node.displayName`). This makes it a very basic list which can be used both for Movies and Persons.
++
+The resulting list is wrapped inside `<Layout>` component which already comes with the Gatsby starter site and which injects header, footer and
+applies some nice styling to the page, so that we don't have to care about it.
++
+<SEO> is another component that comes with the Gatsby starter which generates various SEO tags. You don't have to use it, but it's a nice add-on.
+If you pass `title` argument to it (like we did above) it will use page title in SEO tags and display specified title in the browser tab.
+
+6. Go back to `gatsby-config.js` and add the following to our previous plugin config:
 +
 .Config of the listing page
 [source,JSON]
@@ -389,7 +389,7 @@ pages: [{
 }
 ----
 
-8. Now switch to the terminal window and run `gatsby develop` in your `hello-world` folder:
+7. Now switch to the terminal window and run `gatsby develop` in your `hello-world` folder:
 +
 image::images/guide-8.png["GraphQL query to retrieve persons", width="484px"]
 +
@@ -404,21 +404,265 @@ it was created from the Gatsby starter. So how do we check the contents of our M
 http://localhost:8000/movies[http://localhost:8000/movies] directly in your browser, or you can add a link to the site's main page to make
 your life a bit easier.
 
-9. Open `/src/pages/index.js`
-
+8. Open `/src/pages/index.js`
++
 Modify the "_Go to page 2_" link at the bottom of the page like this:
-
++
     <Link to="/movies">Open Movies/Link>
-
++
 The page should be refreshed automatically and you will see this:
-
++
 image::images/guide-9.png["Link to Movies from the main page", width="685px"]
-
-Click the "Open Movies" link.
-
++
+Click the http://localhost:8000/movies[Open Movies] link.
++
 image::images/guide-10.png["Movies listing", width="393px"]
-
++
 Congratulations! You have built your first Gatsby page with contents from Enonic XP.
-
++
 IMPORTANT: If you make changes to a query, you have to restart the Gatsby development server (press `Ctrl+C` to stop, then `gatsby develop` again)
 since the site pages have to be rebuilt from scratch to respect the new query changes.
+
+
+9. Now repeat steps 6-8 to configure a second page that lists persons on `localhost:8000/persons` and link to it from the site's main page.
+Don't forget to restart the Gatsby dev server after you've added a config for the Persons page.
+
+.Full config of the plugin (so far)
+[source,JSON]
+----
+{
+  resolve: `gatsby-plugin-enonic`,
+  options: {
+    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    application: 'com.example.myproject',
+    refetchInterval: 10,
+    pages: [{
+      query: require.resolve('./src/queries/getMovies'),
+      list: {
+        url: '/movies',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Movies'
+      }
+    },
+    {
+      query: require.resolve('./src/queries/getPersons'),
+      list: {
+        url: '/persons',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Persons'
+      }
+    }]
+  }
+}
+----
+
+You should now have two links on your site's main page:
+
+image::images/guide-11.png["Main page", width="734px"]
+
+Click the http://localhost:8000/persons[Open Persons] link.
+
+image::images/guide-12.png["Persons page", width="517px"]
+
+TIP: You may notice that there are only 10 items on the Persons page, less than the actual number of items in the database.
+That's because of default limitation in GraphQL to make sure you don't overload the server trying to fetch millions of items at once.
+You can increase this limit by adding `first: X` parameter to the query:
+
+    query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName", first: 100)
+
+
+==== Details page
+
+So far we have configured and generated pages that output lists with Movies and Persons, but this is obviously not enough.
+We want to be able to click an item in the list and open a dedicated page showing us details for specific movie or person, things like
+movie description, release date, person biography, photos etc.
+
+Let's configure our plugin to generate a page for every item retrieved from the storage.
+
+First we need to update our queries. While `id` and `displayName` were enough to generate both lists, on details pages we need much more than that.
+For movies we want to show an abstract, a short synopsis and a movie image.
+
+Another thing to decide is what url we want our details pages to have. For movies and persons list pages it was simple
+(`/movies` and `/persons` is an obvious choice) but for the details pages it makes sense to use movie name and person name in the url.
+We cannot use `displayName` since it may contain spaces and other kinds of unsupported characters, so we'll use `name` which is a strictly
+validated and sanitized version of `displayName`.
+
+image::images/guide-13.png["Fields from the Movie content type", width="350px"]
+
+1. Update the movie query (in `src/queries/getMovie.js`) by adding the new fields to it:
++
+.`src/queries/getMovie.js`
+[source,javascript]
+----
+const query = `{
+  guillotine {
+    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", sort: "displayName") {
+      id: _id
+      displayName
+      name: _name
+      ... on com_example_myproject_Movie {
+        data {
+          subtitle
+          abstract
+          photos {
+            ... on media_Image {
+              imageUrl: imageUrl(type: absolute, scale: "width(800)")
+              attachments {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+module.exports = query;
+----
++
+TIP: Lines with colons are for aliases - field names that you want to use instead of original names. For example,
+if you want to use `name` instead of original `_name` then you do `name: _name`
++
+NOTE: Fields that are specific for the `com.example.myproject:movie` content type have to be cast with `... on com_example_myproject_Movie`.
+Here you can also use `%application%` placeholder just like in content types: `... on %application%_Movie`
+
+2. Now we need a template for the movie details page. Create a new file called `movie.js` in the `templates` folder
+(where template of the list page is) with the following contents:
++
+.`src/templates/movie.js`
+[source,javascript]
+----
+import React from "react"
+
+import Layout from "../components/layout"
+import SEO from "../components/seo"
+
+const getPageTitle = (pageContext) => {
+  const node = pageContext.node;
+
+  if (!!node && pageContext.title && (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
+  }
+
+  return pageContext.title || 'Person';
+};
+
+const MoviePage = (args) => {
+    const { pageContext } = args;
+    const node = pageContext.node;
+
+    return (
+      <Layout>
+        <SEO title={getPageTitle(pageContext)} />
+          <div>
+              <h1>{node.displayName}</h1>
+              <p>{node.data.abstract}</p>
+              <img src={node.data.photos[0].imageUrl} alt={node.data.photos[0].attachments[0].altImageText} />
+              <p><i>{node.data.subtitle}</i></p>
+          </div>
+      </Layout>
+    )
+}
+
+export default MoviePage
+
+----
+
+3. Now let's configure the movie details page inside the plugin configuration (in `gatsby-config.js`).
+Add this inside the config of the movies page, right after `list {}`:
++
+.Config of the movie details page
+[source,JSON]
+----
+  details: {   <1>
+    url: '/movie',  <2>
+    template: require.resolve('./src/templates/movie'),  <3>
+    key: 'name',  <4>
+    title: 'displayName'   <5>
+  }
+----
++
+<1> A keyword indicating definition of a details page.
+<2> (optional) Base url of the details page. If your site is on "_localhost:8000_", this page will be on
+"_localhost:8000/*movie*/{key}_" (see below). If omitted, value from `pages.list.url` will be used.
+<3> A path to a Javascript file exposing React component rendering fields of the data node.
+<4> A field in the query whose value will be added to the details page url
+<5> (optional) Title of the page, should you need to use it inside the template
++
+.Full config of the plugin (so far)
+[source,JSON]
+----
+{
+  resolve: `gatsby-plugin-enonic`,
+  options: {
+    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    application: 'com.example.myproject',
+    refetchInterval: 10,
+    pages: [{
+      query: require.resolve('./src/queries/getMovies'),
+      list: {
+        url: '/movies',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Movies'
+      },
+      details: {
+        url: '/movie',
+        template: require.resolve('./src/templates/movie'),
+        key: 'name',
+        title: 'displayName'
+      }
+    },
+    {
+      query: require.resolve('./src/queries/getPersons'),
+      list: {
+        url: '/persons',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Persons'
+      }
+    }]
+  }
+}
+----
+
+4. Stop the Gatsby server (if it's running) and start again by executing `gatsby develop` in your terminal window.
+If everything was configured correctly, there will be no errors and your Gatsby site will be up and running on the same port.
+However, even though individual pages for each movie are (hopefully) generated, we don't see them.
+What we need is to add links from the movie list page to respective details page of each movie.
+
+5. Open the list page template (`/src/templates/list.js`) and import native Gatsby's `Link` component:
+
+    import {Link} from "gatsby";
+
+6. In the same file, replace `<span>` element containing displaying data node name with more complicated condition
+which will render a link if details page is configured and the same old <span> with no link otherwise.
++
+.Render link to the movie details page
+[source,Javascript]
+----
+    <div key={node.id}>
+        {pageContext.detailsPageUrl &&
+            <p>
+                <Link to={`${pageContext.detailsPageUrl}/${node[pageContext.detailsPageKey]}`}>
+                    {node.displayName}
+                </Link>
+            </p>
+        }
+        {!pageContext.detailsPageUrl && <span>{node.displayName}</span>}
+    </div>
+----
++
+As you can see, in `to` parameter of the `<Link>` component we pass combination of details page url
+(`pages.details.url` from the config) and _value_ of the field specified as a key (`pages.details.key`), which
+in our case will be something like "_/movie/pulp-fiction_". The `<p>` element with `<Link>` component inside will
+only be rendered if `detailsPageUrl` is passed in page context, which only happens when details page is configured.
+If not, a simple `<span>` with node's `displayName` will be shown. This way we can still use one template both for Movies
+and Persons even though we have only configured details page for Movies.
+
+7. The list page should refresh automatically (if not - restart the Gatsby server again) and you will see that the movie list
+has now turned into a list of links.
+
+image::images/guide-14.png["Movie list with link to the details pages", width="725px"]
+
+The person list page still looks the same though, since we haven't yet configured details page for it.

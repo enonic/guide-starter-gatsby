@@ -23,7 +23,7 @@ module.exports = {
             url: '/movie',
             template: require.resolve('./src/templates/movie'),
             key: 'name',
-            title: '.displayName'
+            title: 'displayName'
           }
         },
         {
@@ -37,7 +37,7 @@ module.exports = {
             url: '/person',
             template: require.resolve('./src/templates/person'),
             key: 'name',
-            title: '.displayName'
+            title: 'displayName'
           }
         }]
       }

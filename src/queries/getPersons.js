@@ -1,17 +1,17 @@
 const query = `{
   guillotine {
     query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName") {
-      name: _name
       id: _id
       displayName
+      name: _name
       ... on %application%_Person {
         data {
           bio
           photos {
             ... on media_Image {
-              url_w800: imageUrl(type: absolute, scale: "width(800)")
+              imageUrl: imageUrl(type: absolute, scale: "width(800)")
               attachments {
-                name
+                altImageText: name
               }
             }
           }

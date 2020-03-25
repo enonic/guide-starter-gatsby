@@ -15,7 +15,7 @@ const PersonPage = (args) => {
           <div>
               <h1>{node.displayName}</h1>
               <p>{node.data.bio}</p>
-              <img src={node.data.photos[0].url_w800} alt={node.data.photos[0].attachments[0].name}/>
+              <img src={node.data.photos[0].imageUrl} alt={node.data.photos[0].attachments[0].altImageText}/>
           </div>
           <p>
             <Link to={`${pageContext.listPageUrl}`}>Back to persons</Link>

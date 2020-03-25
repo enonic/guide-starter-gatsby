@@ -12,11 +12,11 @@ const MoviePage = (args) => {
 
     return (
       <Layout>
-        <SEO title={getPageTitle(pageContext, node)} />
+        <SEO title={getPageTitle(pageContext)} />
           <div>
               <h1>{node.displayName}</h1>
               <p>{node.data.abstract}</p>
-              <img src={node.data.photos[0].url_w800} alt={node.data.photos[0].attachments[0].name} />
+              <img src={node.data.photos[0].imageUrl} alt={node.data.photos[0].attachments[0].altImageText} />
               <p><i>{node.data.subtitle}</i></p>
           </div>
           <p>
