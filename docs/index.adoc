@@ -480,7 +480,7 @@ movie description, release date, person biography, photos etc.
 Let's configure our plugin to generate a page for every item retrieved from the storage.
 
 First we need to update our queries. While `id` and `displayName` were enough to generate both lists, on details pages we need much more than that.
-For movies we want to show an abstract, a short synopsis and a movie image.
+For movies we want to show an abstract, release date and a movie image.
 
 Another thing to decide is what url we want our details pages to have. For movies and persons list pages it was simple
 (`/movies` and `/persons` is an obvious choice) but for the details pages it makes sense to use movie name and person name in the url.
@@ -506,7 +506,7 @@ const query = `{
           abstract
           photos {
             ... on media_Image {
-              imageUrl: imageUrl(type: absolute, scale: "width(800)")
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
               attachments {
                 name
               }
@@ -535,7 +535,6 @@ Here you can also use `%application%` placeholder just like in content types: `.
 [source,javascript]
 ----
 import React from "react"
-
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 
@@ -551,17 +550,43 @@ const getPageTitle = (pageContext) => {
 
 const MoviePage = (args) => {
     const { pageContext } = args;
-    const node = pageContext.node;
+    const movie = pageContext.node;
+    const movieMeta = movie.data;
 
     return (
       <Layout>
         <SEO title={getPageTitle(pageContext)} />
-          <div>
-              <h1>{node.displayName}</h1>
-              <p>{node.data.abstract}</p>
-              <img src={node.data.photos[0].imageUrl} alt={node.data.photos[0].attachments[0].altImageText} />
-              <p><i>{node.data.subtitle}</i></p>
+        <div>
+          <div style={{
+              display: 'flex',
+              alignItems: 'baseline'
+            }}>
+            <h2>{movie.displayName}
+            {movieMeta.release && (
+              <i style={{
+                fontStyle: 'normal',
+                fontWeight: 'normal',
+                fontSize: '24px',
+                marginLeft: '10px',
+                opacity: '0.7'
+              }}>({new Date(movieMeta.release).getFullYear()})</i>
+            )}
+            </h2>
           </div>
+          <div style={{
+              display: `flex`
+            }}>
+            <img
+              style={{
+                maxWidth: '400px',
+                width: '50%'
+              }}
+              src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].altImageText} />
+            <p style={{
+                margin: `0 20px`
+            }}><i>{movieMeta.abstract}</i></p>
+          </div>
+        </div>
       </Layout>
     )
 }
@@ -569,6 +594,10 @@ const MoviePage = (args) => {
 export default MoviePage
 
 ----
++
+A very simple layout: movie's display name in the header, then a `<div>` element with movie image and abstract side by side. We'll also
+use movie's short description as tooltip on the image, and attachment's name as image's alt text. This is of course just an example - feel
+free to build a layout of your choice using the field of your GraphQL query.
 
 3. Now let's configure the movie details page inside the plugin configuration (in `gatsby-config.js`).
 Add this inside the config of the movies page, right after `list {}`:
@@ -656,13 +685,203 @@ which will render a link if details page is configured and the same old <span> w
 As you can see, in `to` parameter of the `<Link>` component we pass combination of details page url
 (`pages.details.url` from the config) and _value_ of the field specified as a key (`pages.details.key`), which
 in our case will be something like "_/movie/pulp-fiction_". The `<p>` element with `<Link>` component inside will
-only be rendered if `detailsPageUrl` is passed in page context, which only happens when details page is configured.
-If not, a simple `<span>` with node's `displayName` will be shown. This way we can still use one template both for Movies
+only be rendered if `detailsPageUrl` exists in page context, which only happens when details page is configured.
+If not, a simple `<span>` with node's `displayName` will be shown. This way we can still use the same template both for Movies
 and Persons even though we have only configured details page for Movies.
 
 7. The list page should refresh automatically (if not - restart the Gatsby server again) and you will see that the movie list
 has now turned into a list of links.
-
++
 image::images/guide-14.png["Movie list with link to the details pages", width="725px"]
++
+Click any link in the list to open our new movie details page:
++
+image::images/guide-15.png["Movie details page", width="545px"]
++
+Simple but pretty good looking, huh? It's fully responsive, too:
++
+image::images/guide-16.png["Movie details page on a mobile", width="290px"]
++
+One thing we're missing on this page is being able to quickly return back to the list of movies. Our plugin gives you
+this out of the box - a link to the list page will automatically be available in the `pageContext` object of a details page.
 
+8. Modify the Movie details template ((`/src/templates/movie.js`) by importing the `Link` component:
+
+    import {Link} from "gatsby"
+
+9. Add a link to the bottom of the details page, right before closing `</Layout>` tag:
++
+.`src/templates/movie.js`
+[source,javascript]
+----
+  import {Link} from "gatsby"
+  ...
+  </div>
+  <p>
+    <Link to={`${pageContext.listPageUrl}`}>Back to Movies</Link>
+  </p>
+</Layout>
+----
++
+image::images/guide-17.png["Final version of the movie details page", width="545px"]
++
+Now there's "_Back to Movies_" link on every details page which we can click to go back to the list.
++
 The person list page still looks the same though, since we haven't yet configured details page for it.
++
+Let's do that now. We will use the same principle as with the movies - we'll use `name` field as a key for the details page url
+(so that url looks like `/person/<name>`) and show full person's name, short biography and a photo on the details page
+
+10. Modify the Persons query (`src/queries/getPersons.js`) by adding the new fields to it:
++
+.`src/queries/getPersons.js`
+[source,javascript]
+----
+const query = `{
+  query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName", first: 100) {
+    id: _id
+    displayName
+    name: _name
+    ... on %application%_Person {
+      data {
+        bio
+        photos {
+          ... on media_Image {
+            imageUrl: imageUrl(type: absolute, scale: "width(300)")
+            attachments {
+              altName: name
+            }
+          }
+        }
+      }
+    }
+  }
+}`
+
+module.exports = query;
+----
+
+11. Create a template called `person.js` in the `templates` folder with the following contents:
++
+.`src/templates/person.js`
+[source,javascript]
+----
+import React from "react"
+import Layout from "../components/layout"
+import SEO from "../components/seo"
+import {Link} from "gatsby";
+
+const getPageTitle = (pageContext) => {
+  const node = pageContext.node;
+
+  if (!!node && pageContext.title && (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
+  }
+
+  return pageContext.title || 'Person';
+};
+
+const PersonPage = (args) => {
+  const { pageContext } = args;
+  const person = pageContext.node;
+  const personMeta = person.data;
+
+    return (
+      <Layout>
+        <SEO title={getPageTitle(pageContext)} />
+        <div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'baseline'
+          }}>
+            <h2>{person.displayName}</h2>
+          </div>
+          <div style={{
+            display: `flex`
+          }}>
+            <img
+              style={{
+                maxWidth: '400px',
+                width: '50%'
+              }}
+              src={personMeta.photos[0].imageUrl} title={person.displayName} alt={personMeta.photos[0].attachments[0].altImageText} />
+            <p style={{
+              margin: `0 20px`
+            }}><i>{personMeta.bio}</i></p>
+          </div>
+        </div>
+        <p>
+          <Link to={`${pageContext.listPageUrl}`}>Back to Persons</Link>
+        </p>
+      </Layout>
+    )
+}
+
+export default PersonPage
+
+----
++
+TIP: You can move `getPageTitle()` method to a separate helper class since it's exactly the same as the one in the Movie details page.
+
+12. Modify plugin config (`gatsby-config.js`) by adding configuration of the person's details page:
+
+.Config of the person details page
+[source,JSON]
+----
+  details: {
+    url: '/person',
+    template: require.resolve('./src/templates/person'),
+    key: 'name',
+    title: 'displayName'
+  }
+----
++
+.Full config of the plugin
+[source,JSON]
+----
+{
+  resolve: `gatsby-plugin-enonic`,
+  options: {
+    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    application: 'com.example.myproject',
+    refetchInterval: 10,
+    pages: [{
+      query: require.resolve('./src/queries/getMovies'),
+      list: {
+        url: '/movies',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Movies'
+      },
+      details: {
+        url: '/movie',
+        template: require.resolve('./src/templates/movie'),
+        key: 'name',
+        title: 'displayName'
+      }
+    },
+    {
+      query: require.resolve('./src/queries/getPersons'),
+      list: {
+        url: '/persons',
+        template: require.resolve('./src/templates/list.js'),
+        title: 'Persons'
+      },
+      details: {
+        url: '/person',
+        template: require.resolve('./src/templates/person'),
+        key: 'name',
+        title: 'displayName'
+      }
+    }]
+  }
+}
+----
+
+13. Restart the Gatsby starter and check out the new pages:
++
+image::images/guide-19.png["Person list with links to the details pages", width="545px"]
++
+image::images/guide-18.png["Person details page", width="545px"]
++
+
+Congratulations! You have built a simple Gatsby site rendering static pages with data fetched from Enonic XP via GraphQL.

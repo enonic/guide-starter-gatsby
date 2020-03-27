@@ -9,7 +9,7 @@ const query = `{
           bio
           photos {
             ... on media_Image {
-              imageUrl: imageUrl(type: absolute, scale: "width(800)")
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
               attachments {
                 altImageText: name
               }

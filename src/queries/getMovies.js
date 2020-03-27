@@ -6,11 +6,12 @@ const query = `{
       name: _name
       ... on %application%_Movie {
         data {
+          release
           subtitle
           abstract
           photos {
             ... on media_Image {
-              imageUrl: imageUrl(type: absolute, scale: "width(800)")
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
               attachments {
                 altImageText: name
               }
