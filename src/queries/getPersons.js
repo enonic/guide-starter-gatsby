@@ -11,7 +11,7 @@ const query = `{
             ... on media_Image {
               imageUrl: imageUrl(type: absolute, scale: "width(300)")
               attachments {
-                altImageText: name
+                imageText: name
               }
             }
           }

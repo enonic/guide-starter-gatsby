@@ -27,7 +27,7 @@ const PersonPage = (args) => {
                 maxWidth: '400px',
                 width: '50%'
               }}
-              src={personMeta.photos[0].imageUrl} title={person.displayName} alt={personMeta.photos[0].attachments[0].altImageText} />
+              src={personMeta.photos[0].imageUrl} title={person.displayName} alt={personMeta.photos[0].attachments[0].imageText} />
             <p style={{
               margin: `0 20px`
             }}><i>{personMeta.bio}</i></p>

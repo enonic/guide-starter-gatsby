@@ -13,9 +13,26 @@ const query = `{
             ... on media_Image {
               imageUrl: imageUrl(type: absolute, scale: "width(300)")
               attachments {
-                altImageText: name
+                imageText: name
               }
             }  
+          }
+          cast {
+            character
+            actor {
+              id: _id
+              name: _name
+              displayName
+              ... on com_example_myproject_Person {
+                data {
+                  photos {
+                    ... on media_Image {
+                      imageUrl: imageUrl(type: absolute, scale: "square(300)")
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

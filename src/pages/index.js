@@ -11,12 +11,10 @@ const IndexPage = () => (
     <p>Easily fetch data from Enonic XP via Headless API and render it with Gatsby.</p>
     <p>Click the links below to open pages automatically generated from data provided by Enonic Headless
     starter via GraphQL</p>
-    <p>
-        <ul>
-            <li><Link to="/movies">Go to movies</Link></li>
-            <li><Link to="/persons">Go to persons</Link></li>
-        </ul>
-    </p>
+    <ul>
+        <li><Link to="/movies">Go to movies</Link></li>
+        <li><Link to="/persons">Go to persons</Link></li>
+    </ul>
   </Layout>
 )
 

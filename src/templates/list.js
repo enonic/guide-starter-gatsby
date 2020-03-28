@@ -5,7 +5,7 @@ import {Link} from "gatsby";
 import {getPageTitle} from "../helpers/helper";
 
 const ListPage = (args) => {
-    const { pageContext } = args
+    const { pageContext } = args;
     return (
       <Layout>
         <SEO title={getPageTitle(pageContext)} />
@@ -13,7 +13,7 @@ const ListPage = (args) => {
           {
               pageContext.nodes.map(node => (
                 <div key={node.id}>
-                    {!pageContext.detailsPageUrl &&
+                    {pageContext.detailsPageUrl &&
                         <p>
                             <Link to={`${pageContext.detailsPageUrl}/${node[pageContext.detailsPageKey]}`}>
                                 {node.displayName}

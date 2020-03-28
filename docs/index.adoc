@@ -491,7 +491,29 @@ image::images/guide-13.png["Fields from the Movie content type", width="350px"]
 
 1. Update the movie query (in `src/queries/getMovie.js`) by adding the new fields to it:
 +
-.`src/queries/getMovie.js`
+[source,GraphQL]
+----
+  name: _name
+  ... on com_example_myproject_Movie {
+    data {
+      subtitle
+      abstract
+      photos {
+        ... on media_Image {
+          imageUrl: imageUrl(type: absolute, scale: "width(300)")
+          attachments {
+            imageText: name
+          }
+        }
+      }
+    }
+  }
+----
++
+TIP: Lines with colons are for aliases - field names that you want to use instead of original names. For example,
+if you want to use `name` instead of original `_name` then you do `name: _name`
++
+.Full Movies query (`src/queries/getMovie.js`)
 [source,javascript]
 ----
 const query = `{
@@ -508,7 +530,7 @@ const query = `{
             ... on media_Image {
               imageUrl: imageUrl(type: absolute, scale: "width(300)")
               attachments {
-                name
+                imageText: name
               }
             }
           }
@@ -521,9 +543,6 @@ const query = `{
 
 module.exports = query;
 ----
-+
-TIP: Lines with colons are for aliases - field names that you want to use instead of original names. For example,
-if you want to use `name` instead of original `_name` then you do `name: _name`
 +
 NOTE: Fields that are specific for the `com.example.myproject:movie` content type have to be cast with `... on com_example_myproject_Movie`.
 Here you can also use `%application%` placeholder just like in content types: `... on %application%_Movie`
@@ -581,7 +600,7 @@ const MoviePage = (args) => {
                 maxWidth: '400px',
                 width: '50%'
               }}
-              src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].altImageText} />
+              src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].imageText} />
             <p style={{
                 margin: `0 20px`
             }}><i>{movieMeta.abstract}</i></p>
@@ -734,7 +753,25 @@ Let's do that now. We will use the same principle as with the movies - we'll use
 
 10. Modify the Persons query (`src/queries/getPersons.js`) by adding the new fields to it:
 +
-.`src/queries/getPersons.js`
+[source,GraphQL]
+----
+name: _name
+... on %application%_Person {
+  data {
+    bio
+    photos {
+      ... on media_Image {
+        imageUrl: imageUrl(type: absolute, scale: "width(300)")
+        attachments {
+          altName: name
+        }
+      }
+    }
+  }
+}
+----
++
+.Full Persons query (`src/queries/getPersons.js`)
 [source,javascript]
 ----
 const query = `{
@@ -884,4 +921,272 @@ image::images/guide-19.png["Person list with links to the details pages", width=
 image::images/guide-18.png["Person details page", width="545px"]
 +
 
+
+=== Cross-references between the pages
+
+Let's do some funny stuff now and enliven our movie page a little. Let's display cast for each movie on the movie details page - a character name,
+actor playing the role and actor's photo, and add a link to the actor's details page.
+
+1. First we need to expand our query fetching the list of movies to contain details of the movie's cast.
++
+Add this right after the `photos {}` section of the movie query:
++
+[source,GraphQL]
+----
+  cast {
+    character
+    actor {
+      name: _name
+      displayName
+      ... on com_example_myproject_Person {
+        data {
+          photos {
+            ... on media_Image {
+              actorUmageUrl: imageUrl(type: absolute, scale: "width(300)")
+            }
+          }
+        }
+      }
+    }
+  }
+----
++
+NOTE: Why do we need both `name` and `displayName` fields? `displayName` is an original, "human-readable" actor's name, and `name` is
+something that we used to generate details page for persons so we need to use the same field to build a link to the actor's details page.
++
+.Full Movies query (`src/queries/getMovie.js`)
+[source,javascript]
+----
+const query = `{
+    query(contentTypes: "%application%:movie", query: "valid='true'", sort: "displayName") {
+      id: _id
+      displayName
+      name: _name
+      ... on %application%_Movie {
+        data {
+          subtitle
+          abstract
+          photos {
+            ... on media_Image {
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
+              attachments {
+                imageText: name
+              }
+            }
+          }
+          cast {
+            character
+            actor {
+              name: _name
+              displayName
+              ... on com_example_myproject_Person {
+                data {
+                  photos {
+                    ... on media_Image {
+                      imageUrl: imageUrl(type: absolute, scale: "width(50)")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+}
+`
+
+module.exports = query;
+----
++
+TIP: Use http://localhost:8080/site/default/draft/hmdb/api[GraphQL playground] or install https://market.enonic.com/vendors/enonic/graphiql[GraphiQL] admin tool from Enonic Market to test results of your queries.
+
+2. Now modify the movie details template (`/src/templates/movie.js`) to add info about cast to the page.
+Replace `<p>` element with movie abstract to the right of the image
++
+    <p><i>{movieMeta.abstract}</i></p>
++
+with more complex container displaying both the abstract and cast details underneath:
++
+[source,HTML]
+----
+<div style={{
+      margin: `0 20px`
+  }}>
+  <p><i>{movieMeta.abstract}</i></p>
+  {movieMeta.cast && (
+    <>
+      <h4>Cast</h4>
+      <div style={{
+          display: `flex`,
+          padding: '0 15px'
+        }}>
+        {
+          movieMeta.cast.map(cast => (
+            <div
+              key={cast.actor.id}
+              style={{
+                display: `flex`,
+                flexDirection: `column`
+              }}
+            >
+              <img
+                style={{
+                  width: '50%',
+                  marginBottom: '0.5rem'
+                }}
+                src={cast.actor.data.photos[0].imageUrl} title={`${cast.actor.displayName} as ${cast.character}`} alt={cast.character} />
+                <div
+                  style={{
+                    display: `flex`,
+                    flexDirection: `column`
+                  }}>
+                  <i
+                    style={{
+                      fontSize: '14px'
+                  }}>{cast.character}</i>
+                  <Link to={`person/${cast.actor.name}`}>
+                      <span
+                        style={{
+                          fontSize: '14px'
+                      }}>{cast.actor.displayName}</span>
+                  </Link>
+                </div>
+            </div>
+
+          ))
+        }
+      </div>
+    </>
+  )}
+</div>
+----
++
+.Full Movie template (`src/templates/movie.js`)
+[source,javascript]
+----
+import React from "react"
+import Layout from "../components/layout"
+import SEO from "../components/seo"
+import {Link} from "gatsby"
+
+const getPageTitle = (pageContext) => {
+  const node = pageContext.node;
+
+  if (!!node && pageContext.title && (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
+  }
+
+  return pageContext.title || 'Person';
+};
+
+const MoviePage = (args) => {
+    const { pageContext } = args;
+    const movie = pageContext.node;
+    const movieMeta = movie.data;
+
+    return (
+      <Layout>
+        <SEO title={getPageTitle(pageContext)} />
+        <div>
+          <div style={{
+              display: 'flex',
+              alignItems: 'baseline'
+            }}>
+            <h2>{movie.displayName}
+            {movieMeta.release && (
+              <i style={{
+                fontStyle: 'normal',
+                fontWeight: 'normal',
+                fontSize: '24px',
+                marginLeft: '10px',
+                opacity: '0.7'
+              }}>({new Date(movieMeta.release).getFullYear()})</i>
+            )}
+            </h2>
+          </div>
+          <div style={{
+              display: `flex`
+            }}>
+            <img
+              style={{
+                maxWidth: '400px',
+                width: '50%'
+              }}
+              src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].imageText} />
+            <div style={{
+                  margin: `0 20px`
+              }}>
+              <p><i>{movieMeta.abstract}</i></p>
+              {movieMeta.cast && (
+                <>
+                  <h4>Cast</h4>
+                  <div style={{
+                      display: `flex`,
+                      padding: '0 15px'
+                    }}>
+                    {
+                      movieMeta.cast.map(cast => (
+                        <div
+                          key={cast.actor.id}
+                          style={{
+                            display: `flex`,
+                            flexDirection: `column`
+                          }}
+                        >
+                          <img
+                            style={{
+                              width: '50%',
+                              marginBottom: '0.5rem'
+                            }}
+                            src={cast.actor.data.photos[0].imageUrl} title={`${cast.actor.displayName} as ${cast.character}`} alt={cast.character} />
+                            <div
+                              style={{
+                                display: `flex`,
+                                flexDirection: `column`
+                              }}>
+                              <i
+                                style={{
+                                  fontSize: '14px'
+                              }}>{cast.character}</i>
+                              <Link to={`person/${cast.actor.name}`}>
+                                  <span
+                                    style={{
+                                      fontSize: '14px'
+                                  }}>{cast.actor.displayName}</span>
+                              </Link>
+                            </div>
+                        </div>
+
+                      ))
+                    }
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <p>
+          <Link to={`${pageContext.listPageUrl}`}>Back to Movies</Link>
+        </p>
+      </Layout>
+    )
+}
+
+export default MoviePage
+
+----
+
+3. Now restart the Gatsby dev server, open any movie page and embrace the beauty of your creation:
++
+image::images/guide-20.png["Movie details page", width="503px"]
+
 Congratulations! You have built a simple Gatsby site rendering static pages with data fetched from Enonic XP via GraphQL.
+
+TIP: You can find the fully-functional Gatsby starter implementing all of the described tips and tricks in this
+https://github.com/enonic/guide-gatsby-starter[Github repo]. To launch it locally, set up your XP environment, create a project
+based on the Headless Starter as described in the beginning of this guide, and then run this in your terminal:
+
+    git clone git@github.com:enonic/guide-gatsby-starter.git
+    cd guide-gatsby-starter
+    gatsby develop
