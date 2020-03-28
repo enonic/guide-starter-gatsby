@@ -172,7 +172,7 @@ image::images/guide-5.png["Headless Movie Database site in Content Studio", widt
 In this guide we will configure the Enonic plugin to generate static pages listing all movies and persons, as well as dedicated
 page for every movie and person.
 
-=== Install Enonic plugin
+== Install Enonic plugin
 
 You can temporarily stop Gatsby server while we'll be configuring the plugin (note that this will take down the site).
 
@@ -182,7 +182,7 @@ Go to your Gatsby site folder and run the following command in the terminal wind
 
 This will download `gatsby-plugin-enonic` from NPM and add dependency to `package.json` file inside the project.
 
-=== Configure Enonic plugin
+== Configure Enonic plugin
 
 Open the site project ("_hello-world_") in IDE/code editor of your choice (look for inspiration https://www.gatsbyjs.org/tutorial/part-zero/#set-up-a-code-editor[here,window=_blank] if you are unsure)
 
@@ -202,7 +202,7 @@ package.json
 
 Open the file called _gatsby-config.js_ in the project root. Here's where you configure plugins used by the site.
 
-==== General configuration
+=== General configuration
 
 Add this config inside `plugins []`:
 
@@ -233,7 +233,7 @@ will be sent to server every time to fetch the data.
 
 Now let's start configuring the pages.
 
-==== Listing page
+=== Listing page
 
 At the moment of writing Enonic plugin for Gatsby supports two types of pages: `list` and `details`.
 
@@ -356,7 +356,7 @@ pages: [{
   query: require.resolve('./src/queries/getMovies'),  <1>
   list: <2> {
     url: '/movies', <3>
-    template: require.resolve('./src/templates/list.js'), <4>
+    template: require.resolve('./src/templates/list'), <4>
     title: 'Movies' <5>
   }
 }]
@@ -381,7 +381,7 @@ pages: [{
       query: require.resolve('./src/queries/getMovies'),
       list: {
         url: '/movies',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Movies'
       }
     }]
@@ -440,7 +440,7 @@ Don't forget to restart the Gatsby dev server after you've added a config for th
       query: require.resolve('./src/queries/getMovies'),
       list: {
         url: '/movies',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Movies'
       }
     },
@@ -448,7 +448,7 @@ Don't forget to restart the Gatsby dev server after you've added a config for th
       query: require.resolve('./src/queries/getPersons'),
       list: {
         url: '/persons',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Persons'
       }
     }]
@@ -471,7 +471,7 @@ You can increase this limit by adding `first: X` parameter to the query:
     query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName", first: 100)
 
 
-==== Details page
+=== Details page
 
 So far we have configured and generated pages that output lists with Movies and Persons, but this is obviously not enough.
 We want to be able to click an item in the list and open a dedicated page showing us details for specific movie or person, things like
@@ -633,7 +633,7 @@ Add this inside the config of the movies page, right after `list {}`:
       query: require.resolve('./src/queries/getMovies'),
       list: {
         url: '/movies',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Movies'
       },
       details: {
@@ -647,7 +647,7 @@ Add this inside the config of the movies page, right after `list {}`:
       query: require.resolve('./src/queries/getPersons'),
       list: {
         url: '/persons',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Persons'
       }
     }]
@@ -824,7 +824,7 @@ export default PersonPage
 TIP: You can move `getPageTitle()` method to a separate helper class since it's exactly the same as the one in the Movie details page.
 
 12. Modify plugin config (`gatsby-config.js`) by adding configuration of the person's details page:
-
++
 .Config of the person details page
 [source,JSON]
 ----
@@ -849,7 +849,7 @@ TIP: You can move `getPageTitle()` method to a separate helper class since it's 
       query: require.resolve('./src/queries/getMovies'),
       list: {
         url: '/movies',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Movies'
       },
       details: {
@@ -863,7 +863,7 @@ TIP: You can move `getPageTitle()` method to a separate helper class since it's 
       query: require.resolve('./src/queries/getPersons'),
       list: {
         url: '/persons',
-        template: require.resolve('./src/templates/list.js'),
+        template: require.resolve('./src/templates/list'),
         title: 'Persons'
       },
       details: {
