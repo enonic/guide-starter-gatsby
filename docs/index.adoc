@@ -1,55 +1,83 @@
-= Generate static websites with Gatsby and Enonic XP
+= Static websites with Gatsby and Enonic XP
 :toc: right
+:imagesdir: media
+
 This guide takes you through the basics of building Gatsby sites using data from Enonic XP.
 
-
-== Introduction
-Enonic XP provides a powerful headless graphQL API, and a plugin for the Gatsby.js framework. 
-
-This guide takes you through the steps of building a Gatsby site based on data from Enonic's "Headless Move Database".
-
-The guide assume that you are familiar with Gatsby.js, Enonic XP and the headless API in particular. 
-
-If not, we recommed that you start with looking into these tutorials before you continue:
+[NOTE]
+====
+ We assume you are already familiar with Gatsby.js, Enonic XP and the headless API in particular. If not, we recommed that looking into these tutorials before commencing:
 
 * https://developer.enonic.com/templates/headless-cms/[Headless CMS Starter]
 * https://www.gatsbyjs.org/tutorial/[Gatsby Tutorial]
+====
 
-== Create the XP project
+== Introduction
+Gatsby site are created from various data sources. Throughout this guide we will use Enonic XP's headless API. 
 
-Gatsby site are created from various data sources. Throughout this guide we will use Enonic XP to serve data from the Headless API.
+TIP: XP's headless API is also known as "project Guillotine".
 
-Assuming you have already installed the Enonic CLI, run the following command to create a project based on the headless starter:
+XP's headless API is based on graphQL, which is essentially the foundation of Gatsby as well. We will also use a plugin that simplifies working with Gatsby and Enonic XP even further. 
 
+Throughout this guide we will be using data from Enonic's "Headless Move Database".
+
+== tl;dr
+To skip to the end of the tutorial and run a pre-assembled version, follow these simple steps: 
+
+. Launch Enonic XP and deploy the headless starter
++
   enonic project create -r starter-headless
++
+NOTE: Keep the default project name (com.example.myproject)
++
+. Verify that the API is available on http://localhost:8080/site/default/draft/hmdb/api
++
+. Create a new gatsby project as follows:
 
-NOTE: For simplicity, stick with the standard values and project name `com.example.myproject`.
+    git clone git@github.com:enonic/guide-gatsby-starter.git
+    cd guide-gatsby-starter
+    gatsby develop
++
+. The site should now be running on http://localhost:4000 
 
+== Headless Movie Database
 
-=== Headless Movie Database
+Assuming you have already installed Enonic CLI.
 
-The Headless CMS Starter creates a site called
-*Headless Movie Database* which contains sample data about Movies and Persons (actors and directors).
-
+. Create a new project using the headless starter 
++
+Run the following command to create a project based on the headless starter:
++
+  enonic project create -r starter-headless
++
+NOTE: Stick with the standard values and use the project name `com.example.myproject` for the tutorial examples to work properly.
++
+. Deploy the application
++
+  enonic project deploy
++
+The application will not be installed, and create a site called *Headless Movie Database*. The site contains sample data about Movies and Persons (actors and directors).
++
 From Content Studio, the site will look something like this:
-
-image::images/guide-5.png["Headless Movie Database site in Content Studio", width="768px"]
-
-=== Headless API
-
-The API accessing the draft content should now be accessible on http://localhost:8080/site/default/draft/hmdb/api
-
-image::images/guide-2.png["GraphQL playground", width="507px"]
-
-The interface lets us browse the API from the tabs to the right. Additionally, the left hand field lets us run queries, with the result presented in the right hand field.
-
++
+image::hmdb-content.png["Headless Movie Database site in Content Studio", width="768px"]
++
+. Access the API
++
+The API and the draft content should now be accessible on http://localhost:8080/site/default/draft/hmdb/api
++
+image::graphql-playground.png["GraphQL playground", width="507px"]
++
+The interfaced served when we access the endpoint lets us browse the API directly. Use the tabs on the far right to discover. Use the left hand field to run queries, and the result will be presented in the right hand field.
++
 NOTE: *New to GraphQL?* Check out the https://graphql.org[GraphQL documentation].
 
 
-=== Fetching movies
-One of the objectives with this tutorial is listing and presenting movies. Lets start with a simple query that retrieve movies:
+== Running queries
 
-.A query to fetch movies:
+One of the objectives with this tutorial is listing and presenting movies. Using the Headless API interface, lets run a simple query that retrieve movies:
+
+.Query to fetch movies from Headless API
 [source,GraphQL]
 ----
 {
@@ -62,9 +90,9 @@ One of the objectives with this tutorial is listing and presenting movies. Lets 
 }
 ----
 
-image::images/guide-6.png["GraphQL query to retrieve movies", width="929px"]
+image::movies-query.png["GraphQL query to retrieve movies", width="929px"]
 
-The query passes the following parameters:
+The GraphQL query interestingly has a field called `query`. Interestingly, this actually exposes XP's content API query function. We pass the following parameters to the function:
 
 contentTypes:: Fetch only content of the specific type `com.example.myproject:movie`.
 +
@@ -79,19 +107,20 @@ Additionally, the query specifies to get the fiels `id` and `displayName`.
 NOTE: Content type specific fields can be access with introspection `... on com_example_myproject_Movie` where you again
 have to use your application name.
 
-
-== Create a Gatsby project
+== Static Movie Database project
 
 NOTE: The following assumes you have already installed your Gatsby developer environment, including `Node.js`, `Git` and the `Gatsby CLI`
 
-Start by creating a new Gatsby project: We'll call it the "Static Movie DataBase" SMDB for short. Simply run this command in your terminal:
-
+. Create a new Gatsby project
++
+We'll call it the "Static Movie DataBase" SMDB for short. Simply run this command in your terminal:
++
     gatsby new smdb https://github.com/gatsbyjs/gatsby-starter-default
-
++
 TIP: When the site wizard asks you which package manager you would like to use for your new site, choose `NPM`
-
++
 The command creates the following project file structure:
-
++
 .Gatsby movie datbase project structure:
 [source,files]
 ----
@@ -104,37 +133,37 @@ gatsby-config.js
 package-lock.json
 package.json
 ----
-
-To start your local Gatsby development server, run the following command:
-
++
+. Start the Gatsby development server
++
+To start your local Gatsby build server, run the following command:
++
   gatsby develop
-
++
 You should now have a Gatsby server running on http://localhost:8000/.
++
+image::gatsby-default-starter.png["Gatsby Default Starter", width="1008px"]
 
-image::images/guide-4.png["Gatsby Default Starter", width="1008px"]
-
-Next, its time to make Gatsby and Enonic XP communicate!
-
-== The Enonic Gatsby plugin
+== Enonic Gatsby plugin
 
 Gatsby can fetch content directly from Enonic's GraphQL API, and then programmatically use the content create pages. However, to simplify the process we'll use Enonic's Gatsby plugin instead.
 
-=== Install plugin
-
+. Install plugin
++
 Stop your Gatsby instance. And run the following command:
-
++
   npm install gatsby-plugin-enonic
-
++
 The `gatsby-plugin-enonic` is now downloaded from NPM and adds a dependency to the `package.json` file inside the project folder.
-
++
 Once completed, start the Gatsby development environment again, this time the plugin will be automatically loaded as well.
-
-=== Configuring the plugin
-
++
+. Configure the plugin
++
 Open the file `gatsby-config.js`, it is located in your project root folder. This file is where you configure plugins used by the project.
-
++
 Add this config inside the `plugins []` array of your config:
-
++
 .Base plugin config
 [source,JSON]
 ----
@@ -142,38 +171,40 @@ Add this config inside the `plugins []` array of your config:
   resolve: `gatsby-plugin-enonic`,
   options: {
     api: 'http://localhost:8080/site/default/draft/hmdb/api',
-    application: 'com.example.myproject',
     refetchInterval: 10,
   }
 },
 // other plugins here
 ]
 ----
++
 Details on the plugins configuration options:
-
++
 api:: URL to the specific headless API.
-
-application (optional):: Name of your XP application. This is the name you specified when creating the XP project. Can be used as a placeholder in your GraphQL queries later.
-
++
 refetchInterval (optional):: How frequently you want Gatsby to pull XP for new content (in seconds). You don't want this to be too often since a new request will be sent to server every time to fetch the data.
 
-== Movies listing page
+With both XP and Gatsby setup, we're ready to start buildig the site.
+
+== Movies page
 
 The plugin supports two types of pages: `list` and `details`. Let's start by setting up a page for listing Movies.
 
-=== Setup query
+=== Create query
 We will start by setting up a query to fetch movies from Enonic XP.
 
 . Create a new folder `src/queries/` in your Gatsby project.
 
-. In `src/queries` create a file called `getMovies.js` exposing the query fetching the movies:
+. In `src/queries` create a file called `getMovies.js`
++
+Add the following code to the file. If you look closely, you will recognise the query used to fetch movies. However, this time it is wrapped in JavaScript.
 +
 .`src/queries/getMovies.js`
 [source,javascript]
 ----
 const query = `{
   guillotine {
-    query(contentTypes: "%application%:movie", query: "valid='true'", sort: "displayName") {
+    query(contentTypes: "com.enonic.myproject:movie", query: "valid='true'", sort: "displayName") {
       id: _id
       displayName
     }
@@ -187,7 +218,7 @@ NOTE: This query is the same query as we used in the headless API earlier. The p
 
 
 === Create template
-To present the list of movies we need to create a template.
+To present the list of movies we will need a template.
 
 . Create a new folder `/src/templates` in your Gatsby project.
 
@@ -220,23 +251,22 @@ const ListPage = (args) => {
 export default ListPage
 ----
 +
-Gatsby operates with React components. Our listing page (`const ListPage`) is also a React component. It takes a `pageContext` argument which contains the list of `nodes` generated from our GraphQL query. The component iterates through the array of nodes and for every node it outputs a `<div>` with unique key (`node.id`) and an item's display name (`node.displayName`).
+Gatsby operates with React components. Our listing page `const ListPage` is also a React component. It takes a `pageContext` argument which contains the list of `nodes` generated from our query. The component iterates through the array of nodes and for every node it outputs a `<div>` with unique key (`node.id`) and an item's display name (`node.displayName`).
 +
 <SEO> is another React component that comes with the Gatsby starter. It generates various SEO tags. By passing the `title` argument to it (like we do above) it will use the page title in SEO tags and display the specified title in the browser tab.
 
-=== Configure page
-We will now instruct the plugin to generate the `movies`page using the query and template created above,.
+=== Create page
+We now need to instruct the plugin to generate the `movies` page, by combining the query and template created earlier.
 
-. Update your plugin configuration with instructions for creating the movies page
+. Update the plugin configuration with instructions for creating the movies page
 +
-.Plugin config with movies page
+.gatsby-plugin.js
 [source,JSON]
 ----
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
     api: 'http://localhost:8080/site/default/draft/hmdb/api',
-    application: 'com.example.myproject',
     refetchInterval: 10,
     pages: [{ 
       query: require.resolve('./src/queries/getMovies'),
@@ -251,70 +281,55 @@ We will now instruct the plugin to generate the `movies`page using the query and
 ----
 The new `pages` configuration defines the queries to run, and instructions on how to generate the movies page with target URL and which template to use.
 
-NOTE: This page will be available on `localhost:8000/movies`. The Title field is optional.
-+
 
-=== Generate page
+. Generate page
 We are no ready to build the page and view the glorious result.
 
-. When making changes to a query, the Gatsby development server must be restarted(press `Ctrl+C` to stop, then `gatsby develop` again)
+. When making changes to a query, the Gatsby development server must be restarted. (press `Ctrl + C` to stop, then run `gatsby develop` again)
 +
 If everything was configured properly, you will see logs indicating that the site is built and that the Gatsby development server is ready to serve the content.
 +
 . Open the Gatsby site at http://localhost:8000/movies, and you should see the following:
 +
-image::images/guide-10.png["Movies listing", width="393px"]
+image::movies-list.png["Movies listing", width="881px"]
++
+*Congratulations!* You just created your first Gatsby page with content from Enonic XP.
 +
 NOTE: Getting errors? Double-check the previous steps to make sure you didn't miss anything, and verify that Enonic XP is running on port 8080.
 
-=== Link to movies
-Now, lets add a link from the main page to the movies page.
 
-. Load the sites front page in your browser: http:/localhost:8000
-
-. Open the `/src/pages/index.js` file and replace the "Go to page 2" link with this:
-+
-    <Link to="/movies">Open Movies</Link>
-+
-The page should be refreshed automatically and you will see this:
-+
-image::images/guide-9.png["Link to Movies from the main page", width="685px"]
-+
-Click the "Open Movies" link to verify that it works
-+
-*Congratulations!* You just created your first Gatsby page with content from Enonic XP.
-
-
-=== Persons listing page
+== Persons page
 
 This time, we repeat the steps from the movies listing page, but with a few adjustments:
 
 . Create the following query file
 +
-.`src/queries/getPersons.js`
+.src/queries/getPersons.js
 [source,javascript]
 ----
 const query = `{
-  query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName") {
-    id: _id
-    displayName
+  guillotine {
+    query(contentTypes: "com.example.myproject:person", query: "valid='true'", sort: "displayName") {
+      id: _id
+      displayName
+    }
   }
 }`
 
 module.exports = query;
 ----
++
 . Add the persons page to your plugin configuration.
 +
-NOTE: See how we reuse the template used to list movies. 
+NOTE: For persons, we simply reuse the same template used for listing movies. 
 +
-.Plugin config with persons page
+.gatsby-config.js
 [source,JSON]
 ----
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
     api: 'http://localhost:8080/site/default/draft/hmdb/api',
-    application: 'com.example.myproject',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -335,70 +350,78 @@ NOTE: See how we reuse the template used to list movies.
   }
 }
 ----
+. Open the persons page to verify that it works:
+http://localhost:8000/persons
 +
-. Add a new link to the persons page from on the front page. This time, lest use a list:
+It should look somethinglike this:
 +
-  <Link to="/movies/">Open movies</Link><br/>
-  <Link to="/persons/">Open persons</Link>
-+
-After restarting your Gatsby development server, you should now have two links on your site's main page:
-
-image::images/guide-11.png["Main page", width="734px"]
-
-Click the http://localhost:8000/persons[Open Persons] link.
-
-image::images/guide-12.png["Persons page", width="517px"]
+image::persons-list.png["Persons list page", width="675px"]
 
 [TIP]
 ====
-There are only 10 items on the Persons page, but more in the database. You can increase this limit by adding `first: X` parameter to the query.
+The page only lists 10 persons, but there are more in XP. To list more, you can increase this limit by adding `first: N` parameter to the query.
 
-  query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName", first: 100)
+  query(contentTypes: "com.example.myproject:person", query: "valid='true'", sort: "displayName", first: 100)
 ====
+
+== Link to pages
+Now, lets add a link from the main page to the `movies` and `persons` pages.
+
+. Open the sites front page in your browser:
+http://localhost:8000
++
+. Open the main page file `/src/pages/index.js` update it with the following content:
++
+./src/pages/index.js
+[source,JSON]
+----
+import React from "react"
+import { Link } from "gatsby"
+import Layout from "../components/layout"
+import Image from "../components/image"
+import SEO from "../components/seo"
+
+const IndexPage = () => (
+  <Layout>
+    <SEO title="Home" />
+    <h1>Hi people</h1>
+    <p>Welcome to your new Gatsby site.</p>
+    <p>Now go build something great.</p>
+    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
+      <Image />
+    </div>
+    <Link to="/movies/">Open movies</Link><br/>
+    <Link to="/persons/">Open persons</Link>
+
+  </Layout>
+)
+
+export default IndexPage
+----
++
+The page should refresh automatically in your browser, and you will see this:
++
+image::front-links.png["Main page with links", width="918px"]
++
+. Click the links to verify that they work!
+
 
 == Movie details page
 
-So far we have configured and generated pages that output lists with Movies and Persons, but this is obviously not enough.
-We want to be able to click an item in the list and open a dedicated page showing us details for specific movie or person, things like
-movie description, release date, person biography, photos etc.
+Next we want to create pages that present the details of a specific movie.
 
-Let's configure our plugin to generate a page for every item retrieved from the storage.
+We'll use the plugin to generate a page for every movie retrieved from the storage.
 
-First we need to update our queries. While `id` and `displayName` were enough to generate both lists, on details pages we need much more than that.
-For movies we want to show an abstract, release date and a movie image.
+Each movie will also need a unique URL. We cannot use `displayName` since it may contain spaces and other kinds of unsupported characters, however XP always provides a unique `name` (AKA slug) for any content item.
 
-Another thing to decide is what url we want our details pages to have. For movies and persons list pages it was simple
-(`/movies` and `/persons` is an obvious choice) but for the details pages it makes sense to use movie name and person name in the url.
-We cannot use `displayName` since it may contain spaces and other kinds of unsupported characters, so we'll use `name` which is a strictly
-validated and sanitized version of `displayName`.
+image::movie-fields.png["Fields from the Movie content type", width="699px"]
 
-image::images/guide-13.png["Fields from the Movie content type", width="350px"]
+=== Update movie query
+For every movie we want to show an abstract, release date, and a movie image. This means we need to modify our query.
 
-. Update the movie query (in `src/queries/getMovie.js`) by adding the new fields to it:
+. Update the movie query to fetch more fields.
 +
-[source,GraphQL]
-----
-  name: _name
-  ... on com_example_myproject_Movie {
-    data {
-      subtitle
-      abstract
-      photos {
-        ... on media_Image {
-          imageUrl: imageUrl(type: absolute, scale: "width(300)")
-          attachments {
-            imageText: name
-          }
-        }
-      }
-    }
-  }
-----
-+
-TIP: Lines with colons are for aliases - field names that you want to use instead of original names. For example,
-if you want to use `name` instead of original `_name` then you do `name: _name`
-+
-.Full Movies query (`src/queries/getMovie.js`)
+.src/queries/getMovie.js
 [source,javascript]
 ----
 const query = `{
@@ -429,13 +452,23 @@ const query = `{
 module.exports = query;
 ----
 +
-NOTE: Fields that are specific for the `com.example.myproject:movie` content type have to be cast with `... on com_example_myproject_Movie`.
-Here you can also use `%application%` placeholder just like in content types: `... on %application%_Movie`
-
-. Now we need a template for the movie details page. Create a new file called `movie.js` in the `templates` folder
-(where template of the list page is) with the following contents:
+TIP: Lines with colons are for aliases - field names that you want to use instead of original names. For example,
+if you want to use `name` instead of original `_name` then you do `name: _name`
 +
-.`src/templates/movie.js`
+. Verify query:
++
+By running the above query directly in XP, we get the following result:
++
+image::movies-detail-query.png["Query result for movie details", width="720px"]
++
+Notice how the result now includes a lot of new data, including links to images.
+
+=== Movie details template
+Next we need a new template to display all the movie details. 
+
+. Create a new templates file
++
+.src/templates/movie.js
 [source,javascript]
 ----
 import React from "react"
@@ -496,42 +529,24 @@ const MoviePage = (args) => {
 }
 
 export default MoviePage
+----
++
+This template is of course just an example using inline styling and other dirty tricks - feel
+free to customize it later :-).
 
-----
-+
-A very simple layout: movie's display name in the header, then a `<div>` element with movie image and abstract side by side. We'll also
-use movie's short description as tooltip on the image, and attachment's name as image's alt text. This is of course just an example - feel
-free to build a layout of your choice using the field of your GraphQL query.
+=== Update plugin
 
-. Now let's configure the movie details page inside the plugin configuration (in `gatsby-config.js`).
-Add this inside the config of the movies page, right after `list {}`:
+Lets configure the plugin to also generate the movie detail pages. 
+
+. Update your Gatsby configuration
 +
-.Config of the movie details page
-[source,JSON]
-----
-  details: {   <1>
-    url: '/movie',  <2>
-    template: require.resolve('./src/templates/movie'),  <3>
-    key: 'name',  <4>
-    title: 'displayName'   <5>
-  }
-----
-+
-<1> A keyword indicating definition of a details page.
-<2> (optional) Base url of the details page. If your site is on "_localhost:8000_", this page will be on
-"_localhost:8000/*movie*/{key}_" (see below). If omitted, value from `pages.list.url` will be used.
-<3> A path to a Javascript file exposing React component rendering fields of the data node.
-<4> A field in the query whose value will be added to the details page url
-<5> (optional) Title of the page, should you need to use it inside the template
-+
-.Full config of the plugin (so far)
+.gatsby-config.js
 [source,JSON]
 ----
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
     api: 'http://localhost:8080/site/default/draft/hmdb/api',
-    application: 'com.example.myproject',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -541,7 +556,7 @@ Add this inside the config of the movies page, right after `list {}`:
         title: 'Movies'
       },
       details: {
-        url: '/movie',
+        url: '/movies',
         template: require.resolve('./src/templates/movie'),
         key: 'name',
         title: 'displayName'
@@ -558,135 +573,104 @@ Add this inside the config of the movies page, right after `list {}`:
   }
 }
 ----
-
-. Stop the Gatsby server (if it's running) and start again by executing `gatsby develop` in your terminal window.
-If everything was configured correctly, there will be no errors and your Gatsby site will be up and running on the same port.
-However, even though individual pages for each movie are (hopefully) generated, we don't see them.
-What we need is to add links from the movie list page to respective details page of each movie.
-
-. Open the list page template (`/src/templates/list.js`) and import native Gatsby's `Link` component:
-
-    import {Link} from "gatsby";
-
-. In the same file, replace `<span>` element containing displaying data node name with more complicated condition
-which will render a link if details page is configured and the same old <span> with no link otherwise.
 +
-.Render link to the movie details page
+Notice how the new `details` section is placed into the same page configuration as the list page. This basically means we re-use the query to also generate the details page. The new config options for detail pages are:
++
+url (optional):: Base url of the details page. In this case movies will be created in `/movie/{key}`. If omitted, value from `pages.list.url` will be used.
++
+key:: Specify the field in the query whose value will be used as key for the details page url
++
+. Visit one of the movie pages to see the glorious result: http://localhost:8000/movies/pulp-fiction
++
+image::movie-details.png["Movie details page", width="1091px"]
++
+Simple but pretty good looking huh? It's fully responsive - try it out!
+
+
+=== Link to movie details
+
+Generating pages is fine, but we also need to configure our list to link to the actual movies.
+
+. Update the list template to make use of Gatsby's `Link` component:
++
+.src/templates/list.js
 [source,Javascript]
 ----
-    <div key={node.id}>
-        {pageContext.detailsPageUrl &&
-            <p>
-                <Link to={`${pageContext.detailsPageUrl}/${node[pageContext.detailsPageKey]}`}>
-                    {node.displayName}
-                </Link>
-            </p>
-        }
-        {!pageContext.detailsPageUrl && <span>{node.displayName}</span>}
-    </div>
-----
-+
-As you can see, in `to` parameter of the `<Link>` component we pass combination of details page url
-(`pages.details.url` from the config) and _value_ of the field specified as a key (`pages.details.key`), which
-in our case will be something like "_/movie/pulp-fiction_". The `<p>` element with `<Link>` component inside will
-only be rendered if `detailsPageUrl` exists in page context, which only happens when details page is configured.
-If not, a simple `<span>` with node's `displayName` will be shown. This way we can still use the same template both for Movies
-and Persons even though we have only configured details page for Movies.
+import React from "react"
+import Layout from "../components/layout"
+import SEO from "../components/seo"
+import {Link} from "gatsby";
 
-. The list page should refresh automatically (if not - restart the Gatsby server again) and you will see that the movie list
-has now turned into a list of links.
+const ListPage = (args) => {
+    const { pageContext } = args
+    return (
+      <Layout>
+        <SEO title={pageContext.title || `List`} />
+        <h1>{pageContext.title}</h1>
+          {
+              pageContext.nodes.map(node => (
+                <div key={node.id}>
+                    {pageContext.detailsPageUrl &&
+                        <Link to={`${pageContext.detailsPageUrl}/${node[pageContext.detailsPageKey]}`}>
+                            {node.displayName}
+                        </Link>
+                    }
+                    {!pageContext.detailsPageUrl && <span>{node.displayName}</span>}
+                </div>
+          ))
+          }<br/>
+      </Layout>
+    )
+}
+
+export default ListPage
+----
+
+. The list page should refresh automatically, and you will see that the movie list has now turned into a list of links.
 +
-image::images/guide-14.png["Movie list with link to the details pages", width="725px"]
+image::movies-link-list.png["Movie list with link to the details pages", width="824px"]
 +
 Click any link in the list to open our new movie details page:
-+
-image::images/guide-15.png["Movie details page", width="545px"]
-+
-Simple but pretty good looking, huh? It's fully responsive, too:
-+
-image::images/guide-16.png["Movie details page on a mobile", width="290px"]
-+
-One thing we're missing on this page is being able to quickly return back to the list of movies. Our plugin gives you
-this out of the box - a link to the list page will automatically be available in the `pageContext` object of a details page.
 
-. Modify the Movie details template ((`/src/templates/movie.js`) by importing the `Link` component:
+== Person details
 
-    import {Link} from "gatsby"
+By repeating some of the steps above, we can create detail pages for persons as well.
 
-. Add a link to the bottom of the details page, right before closing `</Layout>` tag:
+. Update the persons query
 +
-.`src/templates/movie.js`
-[source,javascript]
-----
-  import {Link} from "gatsby"
-  ...
-  </div>
-  <p>
-    <Link to={`${pageContext.listPageUrl}`}>Back to Movies</Link>
-  </p>
-</Layout>
-----
-+
-image::images/guide-17.png["Final version of the movie details page", width="545px"]
-+
-Now there's "_Back to Movies_" link on every details page which we can click to go back to the list.
-+
-The person list page still looks the same though, since we haven't yet configured details page for it.
-+
-Let's do that now. We will use the same principle as with the movies - we'll use `name` field as a key for the details page url
-(so that url looks like `/person/<name>`) and show full person's name, short biography and a photo on the details page
-
-. Modify the Persons query (`src/queries/getPersons.js`) by adding the new fields to it:
-+
-[source,GraphQL]
-----
-name: _name
-... on %application%_Person {
-  data {
-    bio
-    photos {
-      ... on media_Image {
-        imageUrl: imageUrl(type: absolute, scale: "width(300)")
-        attachments {
-          altName: name
-        }
-      }
-    }
-  }
-}
-----
-+
-.Full Persons query (`src/queries/getPersons.js`)
-[source,javascript]
+.src/queries/getPersons.js
+[source,JavaScript]
 ----
 const query = `{
-  query(contentTypes: "%application%:person", query: "valid='true'", sort: "displayName", first: 100) {
-    id: _id
-    displayName
-    name: _name
-    ... on %application%_Person {
-      data {
-        bio
-        photos {
-          ... on media_Image {
-            imageUrl: imageUrl(type: absolute, scale: "width(300)")
-            attachments {
-              altName: name
+  guillotine {
+    query(contentTypes: "com.example.myproject:person", query: "valid='true'", sort: "displayName", first: 100) {
+      id: _id
+      displayName
+      name: _name
+      ... on com_example_myproject_Person {
+        data {
+          bio
+          photos {
+            ... on media_Image {
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
+              attachments {
+                altName: name
+              }
             }
           }
         }
       }
-    }
+  }
   }
 }`
 
 module.exports = query;
 ----
 
-. Create a template called `person.js` in the `templates` folder with the following contents:
+. Add a person template
 +
-.`src/templates/person.js`
-[source,javascript]
+.src/templates/person.js
+[source,JavaScript]
 ----
 import React from "react"
 import Layout from "../components/layout"
@@ -740,32 +724,19 @@ const PersonPage = (args) => {
 }
 
 export default PersonPage
+----
++
+TIP: You could later try to move the `getPageTitle()` function to a separate helper class since it's exactly the same as the one in the Movie details page.
 
-----
+. Update plugin config to include person detail pages as well
 +
-TIP: You can move `getPageTitle()` method to a separate helper class since it's exactly the same as the one in the Movie details page.
-
-. Modify plugin config (`gatsby-config.js`) by adding configuration of the person's details page:
-+
-.Config of the person details page
-[source,JSON]
-----
-  details: {
-    url: '/person',
-    template: require.resolve('./src/templates/person'),
-    key: 'name',
-    title: 'displayName'
-  }
-----
-+
-.Full config of the plugin
+.gatsby-config.js
 [source,JSON]
 ----
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
     api: 'http://localhost:8080/site/default/draft/hmdb/api',
-    application: 'com.example.myproject',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -789,7 +760,7 @@ TIP: You can move `getPageTitle()` method to a separate helper class since it's 
         title: 'Persons'
       },
       details: {
-        url: '/person',
+        url: '/persons',
         template: require.resolve('./src/templates/person'),
         key: 'name',
         title: 'displayName'
@@ -799,55 +770,29 @@ TIP: You can move `getPageTitle()` method to a separate helper class since it's 
 }
 ----
 
-. Restart the Gatsby starter and check out the new pages:
+. Restart your Gatsby development server and check out the new pages:
 +
-image::images/guide-19.png["Person list with links to the details pages", width="545px"]
+image::persons-link-list.png["Person list with links to the details pages", width="768px"]
 +
-image::images/guide-18.png["Person details page", width="545px"]
-+
+image::morgan-freeman.png["Person details page", width="960px"]
 
 
-== Cross-references between the pages
+== Cross-referencing
 
-Let's do some funny stuff now and enliven our movie page a little. Let's display cast for each movie on the movie details page - a character name,
-actor playing the role and actor's photo, and add a link to the actor's details page.
+To enliven our movie page further. Let's display cast for each movie on the movie details page, including the following: character name, actor playing the role, actor's photo, and link to the actor's details page.
 
-. First we need to expand our query fetching the list of movies to contain details of the movie's cast.
+. Update the movie query to also include cast.
 +
-Add this right after the `photos {}` section of the movie query:
-+
-[source,GraphQL]
-----
-  cast {
-    character
-    actor {
-      name: _name
-      displayName
-      ... on com_example_myproject_Person {
-        data {
-          photos {
-            ... on media_Image {
-              actorUmageUrl: imageUrl(type: absolute, scale: "width(300)")
-            }
-          }
-        }
-      }
-    }
-  }
-----
-+
-NOTE: Why do we need both `name` and `displayName` fields? `displayName` is an original, "human-readable" actor's name, and `name` is
-something that we used to generate details page for persons so we need to use the same field to build a link to the actor's details page.
-+
-.Full Movies query (`src/queries/getMovie.js`)
-[source,javascript]
+.src/queries/getMovie.js
+[source,JavaScript]
 ----
 const query = `{
-    query(contentTypes: "%application%:movie", query: "valid='true'", sort: "displayName") {
+  guillotine {
+    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", sort: "displayName") {
       id: _id
       displayName
       name: _name
-      ... on %application%_Movie {
+      ... on com_example_myproject_Movie {
         data {
           subtitle
           abstract
@@ -868,7 +813,7 @@ const query = `{
                 data {
                   photos {
                     ... on media_Image {
-                      imageUrl: imageUrl(type: absolute, scale: "width(50)")
+                      imageUrl: imageUrl(type: absolute, scale: "block(100,100)")
                     }
                   }
                 }
@@ -878,77 +823,19 @@ const query = `{
         }
       }
     }
-}
-`
+  }
+}`
 
 module.exports = query;
 ----
 +
-TIP: Use http://localhost:8080/site/default/draft/hmdb/api[GraphQL playground] or install https://market.enonic.com/vendors/enonic/graphiql[GraphiQL] admin tool from Enonic Market to test results of your queries.
+NOTE: We include the `name` field of the persons, as we will use use it to link to the actor's details page.
++
+. Update the movie template to list the cast 
++
+.src/templates/movie.js
 
-. Now modify the movie details template (`/src/templates/movie.js`) to add info about cast to the page.
-Replace `<p>` element with movie abstract to the right of the image
-+
-    <p><i>{movieMeta.abstract}</i></p>
-+
-with more complex container displaying both the abstract and cast details underneath:
-+
-[source,HTML]
-----
-<div style={{
-      margin: `0 20px`
-  }}>
-  <p><i>{movieMeta.abstract}</i></p>
-  {movieMeta.cast && (
-    <>
-      <h4>Cast</h4>
-      <div style={{
-          display: `flex`,
-          padding: '0 15px'
-        }}>
-        {
-          movieMeta.cast.map(cast => (
-            <div
-              key={cast.actor.id}
-              style={{
-                display: `flex`,
-                flexDirection: `column`
-              }}
-            >
-              <img
-                style={{
-                  width: '50%',
-                  marginBottom: '0.5rem'
-                }}
-                src={cast.actor.data.photos[0].imageUrl} title={`${cast.actor.displayName} as ${cast.character}`} alt={cast.character} />
-                <div
-                  style={{
-                    display: `flex`,
-                    flexDirection: `column`
-                  }}>
-                  <i
-                    style={{
-                      fontSize: '14px'
-                  }}>{cast.character}</i>
-                  <Link to={`person/${cast.actor.name}`}>
-                      <span
-                        style={{
-                          fontSize: '14px'
-                      }}>{cast.actor.displayName}</span>
-                  </Link>
-                </div>
-            </div>
-
-          ))
-        }
-      </div>
-    </>
-  )}
-</div>
-----
-+
-.Full Movie template (`src/templates/movie.js`)
-[source,javascript]
+[source,JavaScript]
 ----
 import React from "react"
 import Layout from "../components/layout"
@@ -966,115 +853,175 @@ const getPageTitle = (pageContext) => {
 };
 
 const MoviePage = (args) => {
-    const { pageContext } = args;
-    const movie = pageContext.node;
-    const movieMeta = movie.data;
+  const { pageContext } = args;
+  const movie = pageContext.node;
+  const movieMeta = movie.data;
 
-    return (
-      <Layout>
-        <SEO title={getPageTitle(pageContext)} />
-        <div>
+  return (
+    <Layout>
+      <SEO title={getPageTitle(pageContext)} />
+      <div>
+        <div style={{
+            display: 'flex',
+            alignItems: 'baseline'
+          }}>
+          <h2>{movie.displayName}
+          {movieMeta.release && (
+            <i style={{
+              fontStyle: 'normal',
+              fontWeight: 'normal',
+              fontSize: '24px',
+              marginLeft: '10px',
+              opacity: '0.7'
+            }}>({new Date(movieMeta.release).getFullYear()})</i>
+          )}
+          </h2>
+        </div>
+        <div style={{
+            display: `flex`
+          }}>
+          <img
+            style={{
+              maxWidth: '400px',
+              width: '50%'
+            }}
+            src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].imageText} />
           <div style={{
-              display: 'flex',
-              alignItems: 'baseline'
+                margin: `0 20px`
             }}>
-            <h2>{movie.displayName}
-            {movieMeta.release && (
-              <i style={{
-                fontStyle: 'normal',
-                fontWeight: 'normal',
-                fontSize: '24px',
-                marginLeft: '10px',
-                opacity: '0.7'
-              }}>({new Date(movieMeta.release).getFullYear()})</i>
-            )}
-            </h2>
-          </div>
-          <div style={{
-              display: `flex`
-            }}>
-            <img
-              style={{
-                maxWidth: '400px',
-                width: '50%'
-              }}
-              src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].imageText} />
-            <div style={{
-                  margin: `0 20px`
-              }}>
-              <p><i>{movieMeta.abstract}</i></p>
-              {movieMeta.cast && (
-                <>
-                  <h4>Cast</h4>
-                  <div style={{
-                      display: `flex`,
-                      padding: '0 15px'
-                    }}>
-                    {
-                      movieMeta.cast.map(cast => (
-                        <div
-                          key={cast.actor.id}
+            <p><i>{movieMeta.abstract}</i></p>
+            {movieMeta.cast && (
+              <>
+                <h4>Cast</h4>
+                <div style={{
+                    display: `flex`,
+                    padding: '0 15px'
+                  }}>
+                  {
+                    movieMeta.cast.map(cast => (
+                      <div
+                        key={cast.actor.id}
+                        style={{
+                          flex: '1 1 0px',
+                          display: `flex`,
+                          flexDirection: `column`
+                        }}
+                      >
+                        <img
                           style={{
-                            display: `flex`,
-                            flexDirection: `column`
+                            width: '50%',
+                            marginBottom: '0.5rem'
                           }}
-                        >
-                          <img
+                          src={cast.actor.data.photos[0].imageUrl} title={`${cast.actor.displayName} as ${cast.character}`} alt={cast.character} />
+                          <div
                             style={{
-                              width: '50%',
-                              marginBottom: '0.5rem'
-                            }}
-                            src={cast.actor.data.photos[0].imageUrl} title={`${cast.actor.displayName} as ${cast.character}`} alt={cast.character} />
-                            <div
+                              display: `flex`,
+                              flexDirection: `column`
+                            }}>
+                            <i
                               style={{
-                                display: `flex`,
-                                flexDirection: `column`
-                              }}>
-                              <i
-                                style={{
-                                  fontSize: '14px'
-                              }}>{cast.character}</i>
-                              <Link to={`person/${cast.actor.name}`}>
-                                  <span
-                                    style={{
-                                      fontSize: '14px'
-                                  }}>{cast.actor.displayName}</span>
-                              </Link>
-                            </div>
-                        </div>
+                                fontSize: '14px'
+                            }}>{cast.character}</i>
+                            <Link to={`persons/${cast.actor.name}`}>
+                                <span
+                                  style={{
+                                    fontSize: '14px'
+                                }}>{cast.actor.displayName}</span>
+                            </Link>
+                          </div>
+                      </div>
 
-                      ))
-                    }
-                  </div>
-                </>
-              )}
-            </div>
+                    ))
+                  }
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <p>
-          <Link to={`${pageContext.listPageUrl}`}>Back to Movies</Link>
-        </p>
-      </Layout>
-    )
+      </div>
+      <p>
+        <Link to={`${pageContext.listPageUrl}`}>Back to Movies</Link>
+      </p>
+    </Layout>
+  )
 }
 
 export default MoviePage
-
 ----
-
-. Now restart the Gatsby dev server, open any movie page and embrace the beauty of your creation:
 +
-image::images/guide-20.png["Movie details page", width="503px"]
+. Restart the Gatsby dev server once more, open any movie page and embrace the result:
++
+image::movie-cast.png["Movie details page with cast", width="503px"]
 
-Congratulations! You have built a simple Gatsby site rendering static pages with data fetched from Enonic XP.
+== Going live
+
+So far, we have been accessing draft content. This is indeed useful when developing, or setting up a preview environment. However, for production purposes we need to render the site using published content only.
+
+. Publish the HMDB site
++
+Visit Content Studio, select the `HMDB`site and choose `Publish tree` from the top right workflow menu. From the dialog, click `Publish` once more.
+image::movie-cast.png["Movie details page with cast", width="503px"]
++
+By publishing, your content is "merged" to the master branch.
++
+. Verify that both your API and content is live
++
+Visiting the following URL should return the API browser: http://localhost:8080/site/default/master/hmdb/api 
++
+. Update your plugin configuration to read from master branch (published content)
++
+.gatsby-config.js
+[source,JSON]
+----
+{
+  resolve: `gatsby-plugin-enonic`,
+  options: {
+    api: 'http://localhost:8080/site/default/master/hmdb/api',
+    refetchInterval: 10,
+    pages: [{
+      query: require.resolve('./src/queries/getMovies'),
+      list: {
+        url: '/movies',
+        template: require.resolve('./src/templates/list'),
+        title: 'Movies'
+      },
+      details: {
+        url: '/movie',
+        template: require.resolve('./src/templates/movie'),
+        key: 'name',
+        title: 'displayName'
+      }
+    },
+    {
+      query: require.resolve('./src/queries/getPersons'),
+      list: {
+        url: '/persons',
+        template: require.resolve('./src/templates/list'),
+        title: 'Persons'
+      },
+      details: {
+        url: '/persons',
+        template: require.resolve('./src/templates/person'),
+        key: 'name',
+        title: 'displayName'
+      }
+    }]
+  }
+}
+----
++
+. Verify the site
++
+Restart Gatsby once more to pickup the new site, and verify that everything is generated like before on http://localhost:8000
++
+. Finally, test updating and publishing content
++
+Try editing an existing content item, verify that _nothing_ happes on the Gatsby server.
++
+NOTE: Gatsby will pickup changes in your data within a couple of seconds.
++
+Publish the content, and Gatsby will re-generate your site with the changed content.
 
 
-== For the impatient
-
-TIP: You can find the fully-functional Gatsby starter implementing all of the described tips and tricks in this
-https://github.com/enonic/guide-gatsby-starter[Github repo]. To launch it locally, set up your XP environment, create a project
-based on the Headless Starter as described in the beginning of this guide, and then run this in your terminal:
-
-    git clone git@github.com:enonic/guide-gatsby-starter.git
-    cd guide-gatsby-starter
-    gatsby develop
+*Congratulations!*
+You have now built a simple Gatsby site rendering static pages based on content from Enonic XP.

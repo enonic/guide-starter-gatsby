@@ -73,7 +73,7 @@ const MoviePage = (args) => {
                             style={{
                               fontSize: '14px'
                             }}>{cast.character}</i>
-                          <Link to={`person/${cast.actor.name}`}>
+                          <Link to={`persons/${cast.actor.name}`}>
                                   <span
                                     style={{
                                       fontSize: '14px'
