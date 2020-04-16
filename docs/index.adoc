@@ -1,4 +1,4 @@
-= Static websites with Gatsby and Enonic XP
+= Static websites with GatsbyJS and Enonic XP
 :toc: right
 :imagesdir: media
 :src: ../src
@@ -7,7 +7,7 @@ This guide takes you through the basics of building Gatsby sites using data from
 
 [NOTE]
 ====
-This guide assues you are already familiar with Gatsby.js, Enonic XP and the headless API in particular. If not, we recommed that looking into these tutorials before commencing:
+This guide assues you are already familiar with Gatsby, Enonic XP and the headless API in particular. If not, we recommed that looking into these tutorials before commencing:
 
 * https://developer.enonic.com/templates/headless-cms/[Headless CMS Starter]
 * https://www.gatsbyjs.org/tutorial/[Gatsby Tutorial]
