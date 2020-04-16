@@ -7,19 +7,18 @@ This guide takes you through the basics of building Gatsby sites using data from
 
 [NOTE]
 ====
-This guide assues you are already familiar with Gatsby, Enonic XP and the headless API in particular. If not, we recommed that looking into these tutorials before commencing:
+This guide assumes you are already familiar with Gatsby, and Enonic XP. If not, we recommed that looking into these tutorials before commencing:
 
 * https://developer.enonic.com/templates/headless-cms/[Headless CMS Starter]
 * https://www.gatsbyjs.org/tutorial/[Gatsby Tutorial]
 ====
 
 == Introduction
-Gatsby site are created from various data sources. Throughout this guide we will use Enonic XP's headless API, also known as https://developer.enonic.com/docs/headless-cms/stable[project Guillotine].
+Gatsby sites are created from various data sources. Throughout this guide we will use Enonic XP's headless API, also known as https://developer.enonic.com/docs/headless-cms/stable[project Guillotine].
 
-The headless CMS API is based on graphQL, which is a natural companion for Gatsby as well. Throughout this guide we will be using a dataset called the https://developer.enonic.com/templates/headless-cms/[Headless Move Database].
+The headless CMS API is based on graphQL, which is a natural companion for Gatsby. Throughout this guide we will be using a dataset called the https://developer.enonic.com/templates/headless-cms/[Headless Move Database].
 
 We have also developed a Gatsby plugin that simplifies the integration between Gatsby and Enonic XP even further. 
-
 
 == tl;dr
 To skip to the end of the tutorial and run a pre-assembled version, follow these simple steps: 
@@ -36,11 +35,12 @@ NOTE: Use the default project name `com.example.myproject`
 +
 . Create a new gatsby project as follows:
 
-    git clone git@github.com:enonic/guide-gatsby-starter.git
-    cd guide-gatsby-starter
+    gatsby new tldr https://github.com/enonic/guide-gatsby-starter
+    ...
+    cd tldr
     gatsby develop
 +
-. The generated site should now be available on http://localhost:8000 
+. The generated site should now be available on http://localhost:8000
 
 == Headless Movie Database
 
@@ -112,7 +112,7 @@ NOTE: Content type specific fields can be accessed through introspection `... on
 
 == Static Movie Database project
 
-NOTE: The following assumes you have already installed your Gatsby developer environment, including `Node.js`, `Git` and the `Gatsby CLI`
+NOTE: The following steps assume you have already installed the Gatsby developer environment, including `Node.js`, `Git` and the `Gatsby CLI`
 
 . Create a new Gatsby project
 +
@@ -167,7 +167,7 @@ Open the file `gatsby-config.js`, it is located in your project root folder. Thi
 +
 Add this config inside the `plugins []` array of your config, like this:
 +
-.Base plugin config
+.Base config for gatsby-config.js
 [source,JSON]
 ----
 // First parts of config file
@@ -205,7 +205,7 @@ We will start by setting up a query to fetch movies from Enonic XP.
 +
 Add the following code to the file. If you look closely, you will recognise the query used to fetch movies. However, this time it is wrapped in JavaScript.
 +
-.`src/queries/getMovies.js`
+.src/queries/getMovies.js
 [source,javascript]
 ----
 const query = `{
@@ -229,7 +229,7 @@ To present the list of movies we will need a template.
 
 . Create the file `/src/templates/list.js` with the following content:
 +
-.Template for the listing page
+.src/templates/list.js
 [source,javascript]
 ----
 import React from "react"
@@ -265,7 +265,7 @@ We now need to instruct the plugin to generate the `movies` page, by combining t
 
 . Update the plugin configuration with instructions for creating the movies page
 +
-.gatsby-plugin.js
+.Update for gatsby-config.js
 [source,JSON]
 ----
 {
@@ -282,9 +282,9 @@ We now need to instruct the plugin to generate the `movies` page, by combining t
       }
     }]
   }
-}
+},
 ----
-The new `pages` configuration defines the queries to run, and instructions on how to generate the movies page with target URL and which template to use.
+The new `pages` entry gives instructions on how to generate the movies page by combining a query and a template.
 
 . Generate page
 +
@@ -307,7 +307,7 @@ This time, we repeat the steps from the movies listing page, but with a few adju
 
 . Create the persons query file
 +
-NOTE: This time we're fetching some more data for persons, such as person images, as we will them later. 
+NOTE: This time we're fetching some more data for persons, such as person images, as we will need this later. 
 +
 .src/queries/getPersons.js
 [source,JavaScript]
@@ -317,7 +317,7 @@ include::../src/queries/getPersons.js[]
 +
 . Add the persons page to your plugin configuration.
 +
-.gatsby-config.js
+.Update for gatsby-config.js
 [source,JSON]
 ----
 {
@@ -345,7 +345,7 @@ include::../src/queries/getPersons.js[]
 },
 ----
 +
-NOTE: We don't need a new template for persons, as we can reuse the template used for listing movies. 
+NOTE: We simply reuse the template we used for listing movies. 
 +
 . Open the persons page to verify that it works:
 http://localhost:8000/persons
@@ -383,11 +383,11 @@ image::front-links.png["Main page with links", width="918px"]
 
 == Movie details page
 
-Next we want to create pages that present the details of a specific movie.
+Next we want to create pages that represent each specific movie.
 
 We'll use the plugin to generate a page for every movie retrieved from the storage.
 
-Each movie will also need a unique URL. We cannot use `displayName` since it may contain spaces and other kinds of unsupported characters, however XP always provides a unique `name` (AKA slug) for any content item.
+Each movie will also need a unique URL. By default the plugin uses the `id` field, which is alway unique. However XP always provides a URL-friendly `name` field (AKA slug) as well. This field is unique within it's location of the content structure, and fits perfectly for our use case.
 
 image::movie-fields.png["Fields from the Movie content type", width="699px"]
 
@@ -514,7 +514,7 @@ Lets configure the plugin to generate the movie detail pages.
 
 . Update your Gatsby configuration
 +
-.gatsby-config.js
+.Update for gatsby-config.js
 [source,JSON]
 ----
 {
@@ -553,7 +553,7 @@ The new config options for detail pages are:
 +
 url (optional):: Base url of the details page. If omitted, value from `pages.list.url` will be used. In our case, the pages will be created as `/movies/{key}`.
 +
-key:: Specify the field in the query whose value will be used as key for the details page url. In our case, we will be using `name`,
+key (optional):: Specify the field in the query whose value will be used as key for the details page url. Default is `_id`. In our case, we are using the `name` field.
 +
 . Visit one of the movie pages to see the glorious result: http://localhost:8000/movies/pulp-fiction
 +
@@ -596,7 +596,7 @@ TIP: You could later try to move the `getPageTitle()` function to a separate hel
 
 . Update plugin config to generate person detail pages
 +
-.gatsby-config.js
+.Update for gatsby-config.js
 [source,JSON]
 ----
 include::../gatsby-config.js[lines=9..41]
@@ -654,7 +654,7 @@ Visiting the following URL should return the API browser: http://localhost:8080/
 +
 . Update your plugin configuration to read from master branch.
 +
-.gatsby-config.js
+.Update for gatsby-config.js
 [source,JSON]
 ----
 {
