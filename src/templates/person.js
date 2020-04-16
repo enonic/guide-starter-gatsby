@@ -2,7 +2,16 @@ import React from "react"
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 import {Link} from "gatsby";
-import {getPageTitle} from "../helpers/helper";
+
+const getPageTitle = (pageContext) => {
+  const node = pageContext.node;
+
+  if (!!node && pageContext.title && (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
+  }
+
+  return pageContext.title || 'Person';
+};
 
 const PersonPage = (args) => {
   const { pageContext } = args;
@@ -27,7 +36,7 @@ const PersonPage = (args) => {
                 maxWidth: '400px',
                 width: '50%'
               }}
-              src={personMeta.photos[0].imageUrl} title={person.displayName} alt={personMeta.photos[0].attachments[0].imageText} />
+              src={personMeta.photos[0].imageUrl} title={person.displayName} alt={personMeta.photos[0].attachments[0].altImageText} />
             <p style={{
               margin: `0 20px`
             }}><i>{personMeta.bio}</i></p>

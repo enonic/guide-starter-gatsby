@@ -10,7 +10,6 @@ module.exports = {
       resolve: `gatsby-plugin-enonic`,
       options: {
         api: 'http://localhost:8080/site/default/draft/hmdb/api',
-        application: 'com.example.myproject',
         refetchInterval: 10,
         pages: [{
           query: require.resolve('./src/queries/getMovies'),
@@ -20,7 +19,6 @@ module.exports = {
             title: 'Movies'
           },
           details: {
-            url: '/movie',
             template: require.resolve('./src/templates/movie'),
             key: 'name',
             title: 'displayName'
@@ -34,7 +32,6 @@ module.exports = {
             title: 'Persons'
           },
           details: {
-            url: '/persons',
             template: require.resolve('./src/templates/person'),
             key: 'name',
             title: 'displayName'
