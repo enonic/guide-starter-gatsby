@@ -19,6 +19,7 @@ const query = `{
           cast {
             character
             actor {
+              id: _id
               name: _name
               displayName
               ... on com_example_myproject_Person {
