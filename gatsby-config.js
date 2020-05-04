@@ -60,12 +60,13 @@ module.exports = {
         icon: `src/images/gatsby-icon.png`, // This path is relative to the root of the site.
       },
     },
-    // this (optional) plugin enables Progressive Web App + Offline functionality
+    // This (optional) plugin enables Progressive Web App + Offline functionality
     // To learn more, visit: https://gatsby.dev/offline
+    // NB! Doesn't work in `gatsby develop` mode
     {
       resolve: `gatsby-plugin-offline`,
       options: {
-        precachePages: [`/movies`, `/persons`],
+        precachePages: [`/movies/*`, `/persons/*`],
       },
     },
   ],
