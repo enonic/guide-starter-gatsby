@@ -9,7 +9,7 @@ module.exports = {
     {
       resolve: `gatsby-plugin-enonic`,
       options: {
-        api: 'http://localhost:8080/site/default/draft/hmdb/api',
+        api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
         refetchInterval: 10,
         pages: [{
           query: require.resolve('./src/queries/getMovies'),
