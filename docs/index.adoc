@@ -23,15 +23,15 @@ We have also developed a Gatsby plugin that simplifies the integration between G
 == tl;dr
 To skip to the end of the tutorial and run a pre-assembled version, follow these simple steps: 
 
-. Launch Enonic XP and deploy the headless starter in a clean sandbox
+. Launch Enonic XP and deploy a project based on Headless Movie DB in a clean sandbox
 +
-  enonic project create -r starter-headless
+  enonic project create -r app-hmdb
   ...
   enonic project deploy
 +
 NOTE: Use the default project name `com.example.myproject`
 +
-. Verify that the API is available on http://localhost:8080/site/default/draft/hmdb/api
+. Verify that the API is available on http://localhost:8080/site/hmdb/draft/hmdb/api
 +
 . Create a new gatsby project as follows:
 
@@ -52,7 +52,7 @@ Lets get going:
 +
 The following command creates a project based on the headless starter:
 +
-  enonic project create -r starter-headless
+  enonic project create -r app-hmdb
 +
 NOTE: Stick with the standard values and use the project name `com.example.myproject` for the tutorial examples to work properly.
 +
@@ -68,7 +68,7 @@ image::hmdb-content.png["Headless Movie Database site in Content Studio", width=
 +
 . Access the API
 +
-The API and the draft content should now be accessible on http://localhost:8080/site/default/draft/hmdb/api
+The API and the draft content should now be accessible on http://localhost:8080/site/hmdb/draft/hmdb/api
 +
 image::graphql-playground.png["GraphQL playground", width="507px"]
 +
@@ -175,7 +175,7 @@ plugins [
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
     refetchInterval: 10,
   }
 },
@@ -271,7 +271,7 @@ We now need to instruct the plugin to generate the `movies` page, by combining t
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
     refetchInterval: 10,
     pages: [{ 
       query: require.resolve('./src/queries/getMovies'),
@@ -323,7 +323,7 @@ include::../src/queries/getPersons.js[]
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -520,7 +520,7 @@ Lets configure the plugin to generate the movie detail pages.
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/default/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -650,7 +650,7 @@ By publishing, your content is "merged" to the `master branch`. So far we have o
 +
 . Verify that both your API and content is live
 +
-Visiting the following URL should return the API browser: http://localhost:8080/site/default/master/hmdb/api 
+Visiting the following URL should return the API browser: http://localhost:8080/site/hmdb/master/hmdb/api 
 +
 . Update your plugin configuration to read from master branch.
 +
@@ -660,7 +660,7 @@ Visiting the following URL should return the API browser: http://localhost:8080/
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/default/master/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/master/hmdb/api',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
