@@ -5,7 +5,7 @@
   "author": "Alan Semenov <alan.semenov@gmail.com>",
   "dependencies": {
     "gatsby": "^2.32.13",
-    "gatsby-image": "^3.8.0",
+    "gatsby-image": "^3.10.0",
     "gatsby-plugin-enonic": "^0.8.4",
     "gatsby-plugin-manifest": "^2.12.1",
     "gatsby-plugin-offline": "^3.10.2",
