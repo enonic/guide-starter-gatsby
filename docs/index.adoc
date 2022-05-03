@@ -7,7 +7,9 @@ This guide takes you through the basics of building Gatsby sites using data from
 
 [NOTE]
 ====
-This guide assumes you are already familiar with Gatsby, and Enonic XP. If not, we recommed that looking into these tutorials before commencing:
+This guide assumes you are already familiar with Gatsby and Enonic XP, and have both
+https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli[Gatsby CLI] and https://developer.enonic.com/start[Enonic CLI] installed in your system.
+If not, we recommend looking into these tutorials before commencing:
 
 * https://developer.enonic.com/templates/headless-cms/[Headless CMS Starter]
 * https://www.gatsbyjs.org/tutorial/[Gatsby Tutorial]
@@ -23,17 +25,17 @@ We have also developed a Gatsby plugin that simplifies the integration between G
 == tl;dr
 To skip to the end of the tutorial and run a pre-assembled version, follow these simple steps: 
 
-. Launch Enonic XP and deploy a project based on Headless Movie DB in a clean sandbox
+. Launch Enonic XP, create and deploy an Enonic project based on Headless Movie DB in a clean sandbox
 +
   enonic project create -r app-hmdb
-  ...
+  cd myproject
   enonic project deploy
 +
-NOTE: Use the default project name `com.example.myproject`
+NOTE: Accept default values for project name (`com.example.myproject`) and version suggested by CLI while creating the project
 +
-. Verify that the API is available on http://localhost:8080/site/hmdb/draft/hmdb/api
+. Verify that the API is available on http://localhost:8080/site/hmdb/draft/hmdb/_graphql
 +
-. Create a new gatsby project as follows:
+. Create a new Gatsby project as follows:
 
     gatsby new tldr https://github.com/enonic/guide-gatsby-starter
     ...
@@ -44,9 +46,9 @@ NOTE: Use the default project name `com.example.myproject`
 
 == Headless Movie Database
 
-Lets start by setting up an XP project with a suitable dataset and the headless API. The *Headless Movie Database* is a set of sample data about Movies and Persons (actors and directors).
+Let's start by setting up an XP project with a suitable dataset and the headless API. The *Headless Movie Database* is a set of sample data about Movies and Persons (actors and directors).
 
-Lets get going:
+Let's get going:
 
 . Create a new project using the headless starter 
 +
@@ -68,7 +70,7 @@ image::hmdb-content.png["Headless Movie Database site in Content Studio", width=
 +
 . Access the API
 +
-The API and the draft content should now be accessible on http://localhost:8080/site/hmdb/draft/hmdb/api
+The API and the draft content should now be accessible on http://localhost:8080/site/hmdb/draft/hmdb/_graphql
 +
 image::graphql-playground.png["GraphQL playground", width="507px"]
 +
@@ -175,7 +177,7 @@ plugins [
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/_graphql',
     refetchInterval: 10,
   }
 },
@@ -271,7 +273,7 @@ We now need to instruct the plugin to generate the `movies` page, by combining t
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/_graphql',
     refetchInterval: 10,
     pages: [{ 
       query: require.resolve('./src/queries/getMovies'),
@@ -323,7 +325,7 @@ include::../src/queries/getPersons.js[]
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/_graphql',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -520,7 +522,7 @@ Lets configure the plugin to generate the movie detail pages.
 {
   resolve: `gatsby-plugin-enonic`,
   options: {
-    api: 'http://localhost:8080/site/hmdb/draft/hmdb/api',
+    api: 'http://localhost:8080/site/hmdb/draft/hmdb/_graphql',
     refetchInterval: 10,
     pages: [{
       query: require.resolve('./src/queries/getMovies'),
@@ -650,7 +652,7 @@ By publishing, your content is "merged" to the `master branch`. So far we have o
 +
 . Verify that both your API and content is live
 +
-Visiting the following URL should return the API browser: http://localhost:8080/site/hmdb/master/hmdb/api 
+Visiting the following URL should open the API playground: http://localhost:8080/site/hmdb/draft/hmdb/_graphql
 +
 . Update your plugin configuration to read from master branch.
 +
