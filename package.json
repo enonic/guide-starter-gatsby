@@ -8,7 +8,7 @@
     "gatsby-image": "^3.11.0",
     "gatsby-plugin-enonic": "^0.8.5",
     "gatsby-plugin-manifest": "^2.12.1",
-    "gatsby-plugin-offline": "^3.10.2",
+    "gatsby-plugin-offline": "^5.14.1",
     "gatsby-plugin-react-helmet": "^3.10.0",
     "gatsby-plugin-sharp": "^2.14.4",
     "gatsby-source-filesystem": "^2.11.1",
