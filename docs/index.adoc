@@ -20,10 +20,10 @@ Gatsby sites are created from various data sources. Throughout this guide we wil
 
 The headless CMS API is based on graphQL, which is a natural companion for Gatsby. Throughout this guide we will be using a dataset called the https://developer.enonic.com/templates/headless-cms/[Headless Move Database].
 
-We have also developed a Gatsby plugin that simplifies the integration between Gatsby and Enonic XP even further. 
+We have also developed a Gatsby plugin that simplifies the integration between Gatsby and Enonic XP even further.
 
 == tl;dr
-To skip to the end of the tutorial and run a pre-assembled version, follow these simple steps: 
+To skip to the end of the tutorial and run a pre-assembled version, follow these simple steps:
 
 . Launch Enonic XP, create and deploy an Enonic project based on Headless Movie DB in a clean sandbox
 +
@@ -50,7 +50,7 @@ Let's start by setting up an XP project with a suitable dataset and the headless
 
 Let's get going:
 
-. Create a new project using the headless starter 
+. Create a new project using the headless starter
 +
 The following command creates a project based on the headless starter:
 +
@@ -236,13 +236,13 @@ To present the list of movies we will need a template.
 ----
 import React from "react"
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Seo from "../components/seo"
 
 const ListPage = (args) => {
     const { pageContext } = args
     return (
       <Layout>
-        <SEO title={pageContext.title || `List`} />
+        <Seo title={pageContext.title || `List`} />
         <h1>{pageContext.title}</h1>
           {
               pageContext.nodes.map(node => (
@@ -260,7 +260,7 @@ export default ListPage
 +
 Gatsby operates with React components. Our listing page `const ListPage` is also a React component. It takes a `pageContext` argument which contains the list of `nodes` generated from our query. The component iterates through the array of nodes and for every node it outputs a `<div>` with unique key (`node.id`) and an item's display name (`node.displayName`).
 +
-<SEO> is another React component that comes with the Gatsby starter. It generates various SEO tags. By passing the `title` argument to it (like we do above) it will use the page title in SEO tags and display the specified title in the browser tab.
+<Seo> is another React component that comes with the Gatsby starter. It generates various Seo tags. By passing the `title` argument to it (like we do above) it will use the page title in Seo tags and display the specified title in the browser tab.
 
 === Create page
 We now need to instruct the plugin to generate the `movies` page, by combining the query and template created earlier.
@@ -275,7 +275,7 @@ We now need to instruct the plugin to generate the `movies` page, by combining t
   options: {
     api: 'http://localhost:8080/site/hmdb/draft/hmdb/_graphql',
     refetchInterval: 10,
-    pages: [{ 
+    pages: [{
       query: require.resolve('./src/queries/getMovies'),
       list: {
         url: '/movies',
@@ -309,7 +309,7 @@ This time, we repeat the steps from the movies listing page, but with a few adju
 
 . Create the persons query file
 +
-NOTE: This time we're fetching some more data for persons, such as person images, as we will need this later. 
+NOTE: This time we're fetching some more data for persons, such as person images, as we will need this later.
 +
 .src/queries/getPersons.js
 [source,JavaScript]
@@ -347,7 +347,7 @@ include::../src/queries/getPersons.js[]
 },
 ----
 +
-NOTE: We simply reuse the template we used for listing movies. 
+NOTE: We simply reuse the template we used for listing movies.
 +
 . Open the persons page to verify that it works:
 http://localhost:8000/persons
@@ -450,7 +450,7 @@ Next we need a new template to display all the movie details.
 ----
 import React from "react"
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Seo from "../components/seo"
 
 const getPageTitle = (pageContext) => {
   const node = pageContext.node;
@@ -469,7 +469,7 @@ const MoviePage = (args) => {
 
     return (
       <Layout>
-        <SEO title={getPageTitle(pageContext)} />
+        <Seo title={getPageTitle(pageContext)} />
         <div>
           <div style={{
               display: 'flex',
@@ -512,7 +512,7 @@ This template is of course just an example, using inline styling and other dirty
 
 === Update plugin
 
-Lets configure the plugin to generate the movie detail pages. 
+Lets configure the plugin to generate the movie detail pages.
 
 . Update your Gatsby configuration
 +
@@ -549,7 +549,7 @@ Lets configure the plugin to generate the movie detail pages.
 },
 ----
 +
-Notice how the new `details` section is placed into the same page configuration as the list page. This basically means we re-use the query to also generate the details page. 
+Notice how the new `details` section is placed into the same page configuration as the list page. This basically means we re-use the query to also generate the details page.
 +
 The new config options for detail pages are:
 +
@@ -625,7 +625,7 @@ include::../src/queries/getMovies.js[]
 +
 NOTE: We include the `name` field of the persons, as we will use use it to link back to the actor's detail page.
 +
-. Update the movie template to list the cast 
+. Update the movie template to list the cast
 +
 .src/templates/movie.js
 

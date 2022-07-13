@@ -1,7 +1,7 @@
 import { Link } from "gatsby"
 import PropTypes from "prop-types"
 import React from "react"
-import Image from "./image";
+import { XpLogo } from "./xpLogo";
 
 const Header = ({ siteTitle }) => (
   <header
@@ -30,7 +30,9 @@ const Header = ({ siteTitle }) => (
           {siteTitle}
         </Link>
       </h1>
-      <Image style={{width: `80px`}} />
+      <div style={{ width: 100 }}>
+        <XpLogo />
+      </div>
     </div>
   </header>
 )

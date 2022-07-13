@@ -1,6 +1,6 @@
 import React from "react"
 import Layout from "../components/layout"
-import SEO from "../components/seo"
+import Seo from "../components/seo"
 import {Link} from "gatsby";
 
 const getPageTitle = (pageContext) => {
@@ -20,7 +20,7 @@ const PersonPage = (args) => {
 
     return (
       <Layout>
-        <SEO title={getPageTitle(pageContext)} />
+        <Seo title={getPageTitle(pageContext)} />
         <div>
           <div style={{
             display: 'flex',
