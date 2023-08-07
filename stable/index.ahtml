@@ -1071,7 +1071,30 @@ This time we&#8217;re fetching some more data for persons, such as person images
 <div class="listingblock">
 <div class="title">src/queries/getPersons.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">Unresolved directive in index.adoc - include::../src/queries/getPersons.js[]</code></pre>
+<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">const query = `{
+  guillotine {
+    query(contentTypes: "com.example.myproject:person", query: "valid='true'", sort: "displayName", first: 100) {
+      id: _id
+      displayName
+      name: _name
+      ... on com_example_myproject_Person {
+        data {
+          bio
+          photos {
+            ... on media_Image {
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
+              attachments {
+                altName: name
+              }
+            }
+          }
+        }
+      }
+  }
+  }
+}`
+
+module.exports = query;</code></pre>
 </div>
 </div>
 </li>
@@ -1170,7 +1193,30 @@ We simply reuse the template we used for listing movies.
 <div class="listingblock">
 <div class="title">/src/pages/index.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-JSON" data-lang="JSON">Unresolved directive in index.adoc - include::../src/pages/index.js[]</code></pre>
+<pre class="highlight"><code class="language-JSON" data-lang="JSON">import React from "react"
+import { Link } from "gatsby"
+import Layout from "../components/layout"
+import { XpLogo } from "../components/xpLogo"
+import Seo from "../components/seo"
+
+const IndexPage = () =&gt; (
+  &lt;Layout&gt;
+    &lt;Seo title="Home" /&gt;
+    &lt;h1&gt;Hi people&lt;/h1&gt;
+    &lt;p&gt;Welcome to your new Gatsby site.&lt;/p&gt;
+    &lt;p&gt;Now go build something great.&lt;/p&gt;
+    &lt;div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}&gt;
+      &lt;XpLogo /&gt;
+    &lt;/div&gt;
+    &lt;div style={{ marginBottom: `1rem` }}&gt;
+      &lt;Link to="/movies/"&gt;Open movies&lt;/Link&gt;&lt;br/&gt;
+      &lt;Link to="/persons/"&gt;Open persons&lt;/Link&gt;
+    &lt;/div&gt;
+
+  &lt;/Layout&gt;
+)
+
+export default IndexPage</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1443,7 +1489,34 @@ export default MoviePage</code></pre>
 <div class="listingblock">
 <div class="title">src/templates/list.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-Javascript" data-lang="Javascript">Unresolved directive in index.adoc - include::../src/templates/list.js[]</code></pre>
+<pre class="highlight"><code class="language-Javascript" data-lang="Javascript">import React from "react"
+import Layout from "../components/layout"
+import Seo from "../components/seo"
+import {Link} from "gatsby";
+
+const ListPage = (args) =&gt; {
+    const { pageContext } = args
+    return (
+      &lt;Layout&gt;
+        &lt;Seo title={pageContext.title || `List`} /&gt;
+        &lt;h1&gt;{pageContext.title}&lt;/h1&gt;
+          {
+              pageContext.nodes.map(node =&gt; (
+                &lt;div key={node.id}&gt;
+                    {pageContext.detailsPageUrl &amp;&amp;
+                        &lt;Link to={`${pageContext.detailsPageUrl}/${node[pageContext.detailsPageKey]}`}&gt;
+                            {node.displayName}
+                        &lt;/Link&gt;
+                    }
+                    {!pageContext.detailsPageUrl &amp;&amp; &lt;span&gt;{node.displayName}&lt;/span&gt;}
+                &lt;/div&gt;
+          ))
+          }&lt;br/&gt;
+      &lt;/Layout&gt;
+    )
+}
+
+export default ListPage</code></pre>
 </div>
 </div>
 </li>
@@ -1476,7 +1549,58 @@ export default MoviePage</code></pre>
 <div class="listingblock">
 <div class="title">src/templates/person.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">Unresolved directive in index.adoc - include::../src/templates/person.js[]</code></pre>
+<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">import React from "react"
+import Layout from "../components/layout"
+import Seo from "../components/seo"
+import {Link} from "gatsby";
+
+const getPageTitle = (pageContext) =&gt; {
+  const node = pageContext.node;
+
+  if (!!node &amp;&amp; pageContext.title &amp;&amp; (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
+  }
+
+  return pageContext.title || 'Person';
+};
+
+const PersonPage = (args) =&gt; {
+  const { pageContext } = args;
+  const person = pageContext.node;
+  const personMeta = person.data;
+
+    return (
+      &lt;Layout&gt;
+        &lt;Seo title={getPageTitle(pageContext)} /&gt;
+        &lt;div&gt;
+          &lt;div style={{
+            display: 'flex',
+            alignItems: 'baseline'
+          }}&gt;
+            &lt;h2&gt;{person.displayName}&lt;/h2&gt;
+          &lt;/div&gt;
+          &lt;div style={{
+            display: `flex`
+          }}&gt;
+            &lt;img
+              style={{
+                maxWidth: '400px',
+                width: '50%'
+              }}
+              src={personMeta.photos[0].imageUrl} title={person.displayName} alt={personMeta.photos[0].attachments[0].altImageText} /&gt;
+            &lt;p style={{
+              margin: `0 20px`
+            }}&gt;&lt;i&gt;{personMeta.bio}&lt;/i&gt;&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;p&gt;
+          &lt;Link to={`${pageContext.listPageUrl}`}&gt;Back to Persons&lt;/Link&gt;
+        &lt;/p&gt;
+      &lt;/Layout&gt;
+    )
+}
+
+export default PersonPage</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -1497,7 +1621,39 @@ You could later try to move the <code>getPageTitle()</code> function to a separa
 <div class="listingblock">
 <div class="title">Update for gatsby-config.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-JSON" data-lang="JSON">Unresolved directive in index.adoc - include::../gatsby-config.js[lines=9..41]</code></pre>
+<pre class="highlight"><code class="language-JSON" data-lang="JSON">    {
+      resolve: `gatsby-plugin-enonic`,
+      options: {
+        api: 'http://localhost:8080/site/hmdb/draft/hmdb/_graphql',
+        refetchInterval: 10,
+        pages: [{
+          query: require.resolve('./src/queries/getMovies'),
+          list: {
+            url: '/movies',
+            template: require.resolve('./src/templates/list'),
+            title: 'Movies'
+          },
+          details: {
+            template: require.resolve('./src/templates/movie'),
+            key: 'name',
+            title: 'displayName'
+          }
+        },
+        {
+          query: require.resolve('./src/queries/getPersons'),
+          list: {
+            url: '/persons',
+            template: require.resolve('./src/templates/list'),
+            title: 'Persons'
+          },
+          details: {
+            template: require.resolve('./src/templates/person'),
+            key: 'name',
+            title: 'displayName'
+          }
+        }]
+      }
+    },</code></pre>
 </div>
 </div>
 </li>
@@ -1531,7 +1687,48 @@ You could later try to move the <code>getPageTitle()</code> function to a separa
 <div class="listingblock">
 <div class="title">src/queries/getMovies.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">Unresolved directive in index.adoc - include::../src/queries/getMovies.js[]</code></pre>
+<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">const query = `{
+  guillotine {
+    query(contentTypes: "com.example.myproject:movie", query: "valid='true'", sort: "displayName") {
+      id: _id
+      displayName
+      name: _name
+      ... on com_example_myproject_Movie {
+        data {
+          subtitle
+          abstract
+          photos {
+            ... on media_Image {
+              imageUrl: imageUrl(type: absolute, scale: "width(300)")
+              attachments {
+                imageText: name
+              }
+            }
+          }
+          cast {
+            character
+            actor {
+              id: _id
+              name: _name
+              displayName
+              ... on com_example_myproject_Person {
+                data {
+                  photos {
+                    ... on media_Image {
+                      imageUrl: imageUrl(type: absolute, scale: "block(100,100)")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}`
+
+module.exports = query;</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1552,7 +1749,116 @@ We include the <code>name</code> field of the persons, as we will use use it to 
 <div class="listingblock">
 <div class="title">src/templates/movie.js</div>
 <div class="content">
-<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">Unresolved directive in index.adoc - include::../src/templates/movie.js[]</code></pre>
+<pre class="highlight"><code class="language-JavaScript" data-lang="JavaScript">import React from "react"
+import Layout from "../components/layout"
+import Seo from "../components/seo"
+import {Link} from "gatsby"
+
+const getPageTitle = (pageContext) =&gt; {
+  const node = pageContext.node;
+
+  if (!!node &amp;&amp; pageContext.title &amp;&amp; (node[pageContext.title] || node.data[pageContext.title])) {
+    return node[pageContext.title] || node.data[pageContext.title];
+  }
+
+  return pageContext.title || 'Person';
+};
+
+const MoviePage = (args) =&gt; {
+  const { pageContext } = args;
+  const movie = pageContext.node;
+  const movieMeta = movie.data;
+
+  return (
+    &lt;Layout&gt;
+      &lt;Seo title={getPageTitle(pageContext)} /&gt;
+      &lt;div&gt;
+        &lt;div style={{
+            display: 'flex',
+            alignItems: 'baseline'
+          }}&gt;
+          &lt;h2&gt;{movie.displayName}
+          {movieMeta.release &amp;&amp; (
+            &lt;i style={{
+              fontStyle: 'normal',
+              fontWeight: 'normal',
+              fontSize: '24px',
+              marginLeft: '10px',
+              opacity: '0.7'
+            }}&gt;({new Date(movieMeta.release).getFullYear()})&lt;/i&gt;
+          )}
+          &lt;/h2&gt;
+        &lt;/div&gt;
+        &lt;div style={{
+            display: `flex`
+          }}&gt;
+          &lt;img
+            style={{
+              maxWidth: '400px',
+              width: '50%'
+            }}
+            src={movieMeta.photos[0].imageUrl} title={movieMeta.subtitle} alt={movieMeta.photos[0].attachments[0].imageText} /&gt;
+          &lt;div style={{
+                margin: `0 20px`
+            }}&gt;
+            &lt;p&gt;&lt;i&gt;{movieMeta.abstract}&lt;/i&gt;&lt;/p&gt;
+            {movieMeta.cast &amp;&amp; (
+              &lt;&gt;
+                &lt;h4&gt;Cast&lt;/h4&gt;
+                &lt;div style={{
+                    display: `flex`,
+                    padding: '0 15px'
+                  }}&gt;
+                  {
+                    movieMeta.cast.map(cast =&gt; (
+                      &lt;div
+                        key={cast.actor.id}
+                        style={{
+                          flex: '1 1 0px',
+                          display: `flex`,
+                          flexDirection: `column`
+                        }}
+                      &gt;
+                        &lt;img
+                          style={{
+                            width: '50%',
+                            marginBottom: '0.5rem'
+                          }}
+                          src={cast.actor.data.photos[0].imageUrl} title={`${cast.actor.displayName} as ${cast.character}`} alt={cast.character} /&gt;
+                          &lt;div
+                            style={{
+                              display: `flex`,
+                              flexDirection: `column`
+                            }}&gt;
+                            &lt;i
+                              style={{
+                                fontSize: '14px'
+                            }}&gt;{cast.character}&lt;/i&gt;
+                            &lt;Link to={`/persons/${cast.actor.name}`}&gt;
+                                &lt;span
+                                  style={{
+                                    fontSize: '14px'
+                                }}&gt;{cast.actor.displayName}&lt;/span&gt;
+                            &lt;/Link&gt;
+                          &lt;/div&gt;
+                      &lt;/div&gt;
+
+                    ))
+                  }
+                &lt;/div&gt;
+              &lt;/&gt;
+            )}
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;p&gt;
+        &lt;Link to={`${pageContext.listPageUrl}`}&gt;Back to Movies&lt;/Link&gt;
+      &lt;/p&gt;
+    &lt;/Layout&gt;
+  )
+}
+
+export default MoviePage</code></pre>
 </div>
 </div>
 </li>
@@ -1675,7 +1981,7 @@ You have now built a simple Gatsby site rendering static pages based on content 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-08-03 13:53:19 UTC
+Last updated 2023-08-07 09:52:15 UTC
 </div>
 </div>
 </body>
