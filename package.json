@@ -8,7 +8,7 @@
     "gatsby-plugin-image": "^3.13.1",
     "gatsby-plugin-enonic": "^0.9.0",
     "gatsby-plugin-manifest": "^5.13.1",
-    "gatsby-plugin-offline": "^6.13.2",
+    "gatsby-plugin-offline": "^6.13.3",
     "gatsby-plugin-react-helmet": "^6.13.1",
     "gatsby-plugin-sharp": "^5.13.1",
     "gatsby-transformer-sharp": "^5.13.1",
